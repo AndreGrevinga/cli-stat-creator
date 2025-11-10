@@ -1,3 +1,6 @@
+// Package main implements a CLI application for analyzing game score statistics.
+// It reads JSON files containing game scores and calculates various statistics
+// including averages, medians, min/max values, and per-level breakdowns.
 package main
 
 import (
@@ -10,17 +13,24 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+// GameScore represents a single game score entry from a player.
+// It contains the player name, their score, and the level they were playing at.
 type GameScore struct {
 	Player       string
 	Score, Level int
 }
 
+// Statistics holds the calculated statistics from a collection of game scores.
+// It includes totals, aggregates (min, max, average, median), and per-level breakdowns.
 type Statistics struct {
 	TotalGamesPlayed, TotalScore, MinimumScore, MaximumScore int
 	MedianScore, AverageScore                                float64
 	AverageScoreByLevel                                      map[int]float64
 }
 
+// ReadScoresFromFile reads game scores from a JSON file and returns them as a slice of GameScore.
+// The function expects the JSON file to contain an array of objects with Player, Score, and Level fields.
+// Returns an error if the file cannot be read or if the JSON format is invalid.
 func ReadScoresFromFile(filename string) ([]GameScore, error) {
 	gameScores := []GameScore{}
 	data, err := os.ReadFile(filename)
@@ -33,6 +43,10 @@ func ReadScoresFromFile(filename string) ([]GameScore, error) {
 	return gameScores, nil
 }
 
+// CalculateStatistics computes comprehensive statistics from a slice of game scores.
+// It calculates total games, total score, minimum, maximum, average, median,
+// and average scores grouped by level.
+// Returns an error if the scores slice is empty.
 func CalculateStatistics(scores []GameScore) (Statistics, error) {
 	totalGamesPlayed := len(scores)
 	if totalGamesPlayed == 0 {
@@ -89,6 +103,9 @@ func CalculateStatistics(scores []GameScore) (Statistics, error) {
 	return statistic, nil
 }
 
+// GroupByLevel organizes game scores into a map grouped by level.
+// The returned map uses level numbers as keys and slices of GameScore as values.
+// This is useful for calculating per-level statistics.
 func GroupByLevel(scores []GameScore) map[int][]GameScore {
 	resultMap := make(map[int][]GameScore, len(scores))
 	for _, gameScore := range scores {
@@ -98,6 +115,10 @@ func GroupByLevel(scores []GameScore) map[int][]GameScore {
 	return resultMap
 }
 
+// main is the entry point of the application.
+// It reads game scores from a JSON file (data/input.json), calculates statistics,
+// and displays the results in formatted tables including overall statistics
+// and per-level average scores.
 func main() {
 	fmt.Println("Please input the file path to analyze")
 	var filepath string
