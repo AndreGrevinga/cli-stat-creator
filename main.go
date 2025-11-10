@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"os"
 	"slices"
-	"strings"
 
 	"github.com/olekukonko/tablewriter"
 )
@@ -56,10 +55,9 @@ func CalculateStatistics(scores []GameScore) (Statistics, error) {
 	totalScore := 0
 	var minimumScore int
 	var maximumScore int
-	averageScoreByLevel := make(map[int]float64)
-	sortedScores := make([]int, 0, totalGamesPlayed)
-	for _, score := range scores {
-		sortedScores = append(sortedScores, score.Score)
+	sortedScores := make([]int, totalGamesPlayed)
+	for i, score := range scores {
+		sortedScores[i] = score.Score
 	}
 	slices.Sort(sortedScores)
 	var medianScore float64
@@ -71,20 +69,19 @@ func CalculateStatistics(scores []GameScore) (Statistics, error) {
 	for i, gameScore := range scores {
 		score := gameScore.Score
 		totalScore += score
-		if i == 0 {
+		switch {
+		case i == 0:
 			minimumScore = score
 			maximumScore = score
-		}
-		if score < minimumScore {
+		case score < minimumScore:
 			minimumScore = score
-		}
-		if score > maximumScore {
+		case score > maximumScore:
 			maximumScore = score
 		}
-
 	}
 	averageScore := float64(totalScore) / float64(totalGamesPlayed)
 	groupedByLevel := GroupByLevel(scores)
+	averageScoreByLevel := make(map[int]float64, len(groupedByLevel))
 	for level, innerScores := range groupedByLevel {
 		sum := 0
 		for _, score := range innerScores {
@@ -125,10 +122,6 @@ func main() {
 	var filepath string
 	//fmt.Scan(&filepath)
 	filepath = "data/input.json"
-	if !strings.HasSuffix(filepath, ".json") {
-		fmt.Println("Error file needs to be a .json")
-		return
-	}
 	var gameScores []GameScore
 	gameScores, err := ReadScoresFromFile(filepath)
 	if err != nil {
