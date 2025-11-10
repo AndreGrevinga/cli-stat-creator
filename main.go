@@ -8,7 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"sort"
+	"slices"
+	"strings"
 
 	"github.com/olekukonko/tablewriter"
 )
@@ -35,7 +36,7 @@ func ReadScoresFromFile(filename string) ([]GameScore, error) {
 	gameScores := []GameScore{}
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read file %s: %w", filename, err)
 	}
 	if err := json.Unmarshal(data, &gameScores); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
@@ -55,17 +56,17 @@ func CalculateStatistics(scores []GameScore) (Statistics, error) {
 	totalScore := 0
 	var minimumScore int
 	var maximumScore int
-	averageScoreByLevel := make(map[int]float64, totalGamesPlayed)
-	sortedScores := make([]GameScore, totalGamesPlayed)
-	copy(sortedScores, scores)
-	sort.Slice(sortedScores, func(i, j int) bool {
-		return sortedScores[i].Score < sortedScores[j].Score
-	})
+	averageScoreByLevel := make(map[int]float64)
+	sortedScores := make([]int, 0, totalGamesPlayed)
+	for _, score := range scores {
+		sortedScores = append(sortedScores, score.Score)
+	}
+	slices.Sort(sortedScores)
 	var medianScore float64
 	if totalGamesPlayed%2 == 0 {
-		medianScore = (float64(sortedScores[(totalGamesPlayed/2)-1].Score) + float64(sortedScores[(totalGamesPlayed/2)].Score)) / 2.
+		medianScore = (float64(sortedScores[(totalGamesPlayed/2)-1]) + float64(sortedScores[(totalGamesPlayed/2)])) / 2.
 	} else {
-		medianScore = float64(sortedScores[(totalGamesPlayed-1)/2].Score)
+		medianScore = float64(sortedScores[(totalGamesPlayed-1)/2])
 	}
 	for i, gameScore := range scores {
 		score := gameScore.Score
@@ -107,7 +108,7 @@ func CalculateStatistics(scores []GameScore) (Statistics, error) {
 // The returned map uses level numbers as keys and slices of GameScore as values.
 // This is useful for calculating per-level statistics.
 func GroupByLevel(scores []GameScore) map[int][]GameScore {
-	resultMap := make(map[int][]GameScore, len(scores))
+	resultMap := make(map[int][]GameScore)
 	for _, gameScore := range scores {
 		slice := append(resultMap[gameScore.Level], gameScore)
 		resultMap[gameScore.Level] = slice
@@ -124,13 +125,17 @@ func main() {
 	var filepath string
 	//fmt.Scan(&filepath)
 	filepath = "data/input.json"
+	if !strings.HasSuffix(filepath, ".json") {
+		fmt.Println("Error file needs to be a .json")
+		return
+	}
 	var gameScores []GameScore
 	gameScores, err := ReadScoresFromFile(filepath)
 	if err != nil {
 		fmt.Println("Error reading file:", err)
 		return
 	}
-	Statistics, err := CalculateStatistics(gameScores)
+	statistics, err := CalculateStatistics(gameScores)
 	if err != nil {
 		fmt.Println("Error calculating statistics:", err)
 		return
@@ -138,14 +143,14 @@ func main() {
 	dataTable := tablewriter.NewTable(os.Stdout)
 	dataTable.Header([]string{"TotalGamesPlayed", "TotalScore", "AverageScore", "MedianScore", "MinimumScore", "MaximumScore"})
 	dataTable.Append([]string{
-		fmt.Sprintf("%d", Statistics.TotalGamesPlayed), fmt.Sprintf("%d", Statistics.TotalScore),
-		fmt.Sprintf("%.2f", Statistics.AverageScore), fmt.Sprintf("%.2f", Statistics.MedianScore),
-		fmt.Sprintf("%d", Statistics.MinimumScore), fmt.Sprintf("%d", Statistics.MaximumScore),
+		fmt.Sprintf("%d", statistics.TotalGamesPlayed), fmt.Sprintf("%d", statistics.TotalScore),
+		fmt.Sprintf("%.2f", statistics.AverageScore), fmt.Sprintf("%.2f", statistics.MedianScore),
+		fmt.Sprintf("%d", statistics.MinimumScore), fmt.Sprintf("%d", statistics.MaximumScore),
 	})
 	dataTable.Render()
 	groupedDataTable := tablewriter.NewTable(os.Stdout)
 	groupedDataTable.Header([]string{"Level", "Average Score"})
-	for level, averageScore := range Statistics.AverageScoreByLevel {
+	for level, averageScore := range statistics.AverageScoreByLevel {
 		groupedDataTable.Append([]string{fmt.Sprintf("%d", level), fmt.Sprintf("%.2f", averageScore)})
 	}
 	groupedDataTable.Render()
