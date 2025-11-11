@@ -44,7 +44,7 @@ jobs:
       run: go test -v -race -coverprofile=coverage.out ./...
 
     - name: Build
-      run: go build -v -o cli-stat-creator
+      run: go build -v -o cmd/cli-stat-creator/main.go
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
