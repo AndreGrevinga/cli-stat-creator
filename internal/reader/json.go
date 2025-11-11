@@ -1,0 +1,24 @@
+package reader
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+
+	"cli-stat-creator/internal/stats"
+)
+
+// ReadScoresFromFile reads game scores from a JSON file and returns them as a slice of GameScore.
+// The function expects the JSON file to contain an array of objects with Player, Score, and Level fields.
+// Returns an error if the file cannot be read or if the JSON format is invalid.
+func ReadScoresFromFile(filename string) ([]stats.GameScore, error) {
+	gameScores := []stats.GameScore{}
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %s: %w", filename, err)
+	}
+	if err := json.Unmarshal(data, &gameScores); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
+	}
+	return gameScores, nil
+}

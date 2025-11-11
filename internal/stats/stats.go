@@ -1,16 +1,8 @@
-// Package main implements a CLI application for analyzing game score statistics.
-// It reads JSON files containing game scores and calculates various statistics
-// including averages, medians, min/max values, and per-level breakdowns.
-package main
+package stats
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
-	"os"
 	"slices"
-
-	"github.com/olekukonko/tablewriter"
 )
 
 // GameScore represents a single game score entry from a player.
@@ -26,21 +18,6 @@ type Statistics struct {
 	TotalGamesPlayed, TotalScore, MinimumScore, MaximumScore int
 	MedianScore, AverageScore                                float64
 	AverageScoreByLevel                                      map[int]float64
-}
-
-// ReadScoresFromFile reads game scores from a JSON file and returns them as a slice of GameScore.
-// The function expects the JSON file to contain an array of objects with Player, Score, and Level fields.
-// Returns an error if the file cannot be read or if the JSON format is invalid.
-func ReadScoresFromFile(filename string) ([]GameScore, error) {
-	gameScores := []GameScore{}
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read file %s: %w", filename, err)
-	}
-	if err := json.Unmarshal(data, &gameScores); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
-	}
-	return gameScores, nil
 }
 
 // CalculateStatistics computes comprehensive statistics from a slice of game scores.
@@ -111,40 +88,4 @@ func GroupByLevel(scores []GameScore) map[int][]GameScore {
 		resultMap[gameScore.Level] = slice
 	}
 	return resultMap
-}
-
-// main is the entry point of the application.
-// It reads game scores from a JSON file (data/input.json), calculates statistics,
-// and displays the results in formatted tables including overall statistics
-// and per-level average scores.
-func main() {
-	fmt.Println("Please input the file path to analyze")
-	var filepath string
-	//fmt.Scan(&filepath)
-	filepath = "data/input.json"
-	var gameScores []GameScore
-	gameScores, err := ReadScoresFromFile(filepath)
-	if err != nil {
-		fmt.Println("Error reading file:", err)
-		return
-	}
-	statistics, err := CalculateStatistics(gameScores)
-	if err != nil {
-		fmt.Println("Error calculating statistics:", err)
-		return
-	}
-	dataTable := tablewriter.NewTable(os.Stdout)
-	dataTable.Header([]string{"TotalGamesPlayed", "TotalScore", "AverageScore", "MedianScore", "MinimumScore", "MaximumScore"})
-	dataTable.Append([]string{
-		fmt.Sprintf("%d", statistics.TotalGamesPlayed), fmt.Sprintf("%d", statistics.TotalScore),
-		fmt.Sprintf("%.2f", statistics.AverageScore), fmt.Sprintf("%.2f", statistics.MedianScore),
-		fmt.Sprintf("%d", statistics.MinimumScore), fmt.Sprintf("%d", statistics.MaximumScore),
-	})
-	dataTable.Render()
-	groupedDataTable := tablewriter.NewTable(os.Stdout)
-	groupedDataTable.Header([]string{"Level", "Average Score"})
-	for level, averageScore := range statistics.AverageScoreByLevel {
-		groupedDataTable.Append([]string{fmt.Sprintf("%d", level), fmt.Sprintf("%.2f", averageScore)})
-	}
-	groupedDataTable.Render()
 }
