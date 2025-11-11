@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a CLI application for analyzing game score statistics. It reads JSON files containing game scores and calculates various statistics including averages, medians, and per-level breakdowns.
 
 ## Build/Run/Test Commands
-- Build: `go build -o cli-stat-creator`
-- Run: `go run main.go`
+- Build: `go build -o cli-stat-creator ./cmd/cli-stat-creator`
+- Run: `go run ./cmd/cli-stat-creator`
 - Test: `go test ./...`
 - Test single file: `go test -v path/to/file_test.go`
 - Format code: `gofmt -w .`
@@ -32,19 +32,38 @@ This is a CLI application for analyzing game score statistics. It reads JSON fil
 ## Project Structure
 ```
 .
-├── main.go          # Application entry point with score analysis functions
-├── go.mod           # Go module definition (cli-stat-creator)
-├── data/            # Sample input data directory
-│   ├── input.json   # Sample game scores in JSON format
-│   └── README.md    # Documentation for data structure
-├── README.md        # Project documentation
-└── CLAUDE.md        # AI assistant guidelines
+├── cmd/
+│   └── cli-stat-creator/
+│       └── main.go           # Application entry point
+├── internal/
+│   ├── stats/
+│   │   └── stats.go          # Statistics calculation and game score types
+│   ├── reader/
+│   │   └── json.go           # JSON file reading functionality
+│   └── display/
+│       └── table.go          # Table rendering and display functions
+├── data/                     # Sample input data directory
+│   ├── input.json            # Sample game scores in JSON format
+│   └── README.md             # Documentation for data structure
+├── go.mod                    # Go module definition (cli-stat-creator)
+├── README.md                 # Project documentation
+└── CLAUDE.md                 # AI assistant guidelines
 ```
 
-## Key Functions
+## Key Packages and Functions
+
+### internal/stats
+- `GameScore`: Type representing individual game score entries (Player, Score, Level)
+- `Statistics`: Type holding calculated statistics from score data
+- `CalculateStatistics(scores []GameScore) (Statistics, error)`: Calculates comprehensive statistics including totals, averages, medians, and per-level breakdowns
+- `GroupByLevel(scores []GameScore) map[int][]GameScore`: Groups scores by level for analysis
+
+### internal/reader
 - `ReadScoresFromFile(filename string) ([]GameScore, error)`: Reads and parses game scores from JSON file
-- `CalculateStatistics(scores []GameScore) (Statistics, error)`: Calculates comprehensive statistics (currently stub)
-- `GroupByLevel(scores []GameScore) map[int][]GameScore`: Groups scores by level for analysis (currently stub)
+
+### internal/display
+- `RenderStatistics(s Statistics)`: Renders overall statistics table to stdout
+- `RenderLevelBreakdown(s Statistics)`: Renders per-level average scores table to stdout
 
 ## Data Format
 Input JSON should contain an array of game score objects with fields:
