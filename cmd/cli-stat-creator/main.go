@@ -17,9 +17,9 @@ import (
 func main() {
 	fmt.Println("Please input the file path to analyze")
 	var filepath string
+	//Todo: remove comment, is just here to make debugging easier
 	//fmt.Scan(&filepath)
 	filepath = "data/input.json"
-	var gameScores []stats.GameScore
 	gameScores, err := reader.ReadScoresFromFile(filepath)
 	if err != nil {
 		fmt.Println("Error reading file:", err)

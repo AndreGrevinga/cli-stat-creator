@@ -1,3 +1,5 @@
+// Package reader provides functionality for reading and parsing game score data
+// from various input sources. Currently supports JSON file format.
 package reader
 
 import (
@@ -12,7 +14,7 @@ import (
 // The function expects the JSON file to contain an array of objects with Player, Score, and Level fields.
 // Returns an error if the file cannot be read or if the JSON format is invalid.
 func ReadScoresFromFile(filename string) ([]stats.GameScore, error) {
-	gameScores := []stats.GameScore{}
+	var gameScores []stats.GameScore
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file %s: %w", filename, err)

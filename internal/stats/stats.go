@@ -1,3 +1,6 @@
+// Package stats provides types and functions for calculating game score statistics.
+// It supports computing aggregates like averages, medians, min/max values,
+// and per-level breakdowns from collections of game scores.
 package stats
 
 import (
