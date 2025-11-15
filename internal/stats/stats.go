@@ -8,10 +8,15 @@ import (
 	"slices"
 )
 
+type Player struct {
+	name string
+	id   int
+}
+
 // GameScore represents a single game score entry from a player.
 // It contains the player name, their score, and the level they were playing at.
 type GameScore struct {
-	Player       string
+	Player       Player
 	Score, Level int
 }
 
@@ -20,7 +25,14 @@ type GameScore struct {
 type Statistics struct {
 	TotalGamesPlayed, TotalScore, MinimumScore, MaximumScore int
 	MedianScore, AverageScore                                float64
-	AverageScoreByLevel                                      map[int]float64
+}
+
+type LevelStatistics struct {
+	Level int
+}
+
+type PlayerStatistics struct {
+	Player string
 }
 
 // CalculateStatistics computes comprehensive statistics from a slice of game scores.
@@ -33,11 +45,11 @@ func CalculateStatistics(scores []GameScore) (Statistics, error) {
 		return Statistics{}, errors.New("no scores provided")
 	}
 	totalScore := 0
-	var minimumScore int
-	var maximumScore int
 	sortedScores := make([]int, totalGamesPlayed)
-	for i, score := range scores {
-		sortedScores[i] = score.Score
+	for i, gameScore := range scores {
+		score := gameScore.Score
+		totalScore += score
+		sortedScores[i] = score
 	}
 	slices.Sort(sortedScores)
 	var medianScore float64
@@ -46,38 +58,16 @@ func CalculateStatistics(scores []GameScore) (Statistics, error) {
 	} else {
 		medianScore = float64(sortedScores[(totalGamesPlayed-1)/2])
 	}
-	for i, gameScore := range scores {
-		score := gameScore.Score
-		totalScore += score
-		switch {
-		case i == 0:
-			minimumScore = score
-			maximumScore = score
-		case score < minimumScore:
-			minimumScore = score
-		case score > maximumScore:
-			maximumScore = score
-		}
-	}
+	minimumScore := sortedScores[0]
+	maximumScore := sortedScores[len(sortedScores)-1]
 	averageScore := float64(totalScore) / float64(totalGamesPlayed)
-	groupedByLevel := GroupByLevel(scores)
-	averageScoreByLevel := make(map[int]float64, len(groupedByLevel))
-	for level, innerScores := range groupedByLevel {
-		sum := 0
-		for _, score := range innerScores {
-			sum += score.Score
-		}
-		levelAverage := float64(sum) / float64(len(innerScores))
-		averageScoreByLevel[level] = levelAverage
-	}
 	statistic := Statistics{
-		TotalGamesPlayed:    totalGamesPlayed,
-		TotalScore:          totalScore,
-		MinimumScore:        minimumScore,
-		MaximumScore:        maximumScore,
-		MedianScore:         medianScore,
-		AverageScore:        averageScore,
-		AverageScoreByLevel: averageScoreByLevel}
+		TotalGamesPlayed: totalGamesPlayed,
+		TotalScore:       totalScore,
+		MinimumScore:     minimumScore,
+		MaximumScore:     maximumScore,
+		MedianScore:      medianScore,
+		AverageScore:     averageScore}
 	return statistic, nil
 }
 
@@ -91,4 +81,12 @@ func GroupByLevel(scores []GameScore) map[int][]GameScore {
 		resultMap[gameScore.Level] = slice
 	}
 	return resultMap
+}
+
+func GroupByPlayer(scores []GameScore) {
+	resultMap := make(map[Player][]GameScore)
+	for _, gameScore := range scores {
+		slice := append(resultMap[gameScore.Player], gameScore)
+		resultMap[gameScore.Player] = slice
+	}
 }
