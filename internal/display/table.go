@@ -6,7 +6,6 @@ import (
 	"cli-stat-creator/internal/stats"
 	"fmt"
 	"os"
-	"slices"
 
 	"github.com/olekukonko/tablewriter"
 )
@@ -28,6 +27,8 @@ func RenderStatistics(s stats.Statistics) {
 // RenderLevelBreakdown displays average scores grouped by level in a formatted table.
 // It renders each level number along with its corresponding average score to stdout.
 // The order of levels displayed is non-deterministic due to map iteration.
+// TODO: Reimplemented per-level statistics in different way
+/*
 func RenderLevelBreakdown(s stats.Statistics) {
 	table := tablewriter.NewTable(os.Stdout)
 
@@ -43,3 +44,4 @@ func RenderLevelBreakdown(s stats.Statistics) {
 	}
 	table.Render()
 }
+*/

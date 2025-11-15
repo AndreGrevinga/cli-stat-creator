@@ -31,5 +31,6 @@ func main() {
 		return
 	}
 	display.RenderStatistics(statistics)
-	display.RenderLevelBreakdown(statistics)
+	// TODO: Reimplemented per-level statistics in different way
+	// display.RenderLevelBreakdown(statistics)
 }

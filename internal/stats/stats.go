@@ -9,15 +9,16 @@ import (
 )
 
 type Player struct {
-	name string
-	id   int
+	Name string `json:"name"`
+	ID   int    `json:"id"`
 }
 
 // GameScore represents a single game score entry from a player.
 // It contains the player name, their score, and the level they were playing at.
 type GameScore struct {
-	Player       Player
-	Score, Level int
+	Player Player `json:"player"`
+	Score  int    `json:"score"`
+	Level  int    `json:"level"`
 }
 
 // Statistics holds the calculated statistics from a collection of game scores.
@@ -83,10 +84,11 @@ func GroupByLevel(scores []GameScore) map[int][]GameScore {
 	return resultMap
 }
 
-func GroupByPlayer(scores []GameScore) {
+func GroupByPlayer(scores []GameScore) map[Player][]GameScore {
 	resultMap := make(map[Player][]GameScore)
 	for _, gameScore := range scores {
 		slice := append(resultMap[gameScore.Player], gameScore)
 		resultMap[gameScore.Player] = slice
 	}
+	return resultMap
 }
