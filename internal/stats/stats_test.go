@@ -5,6 +5,10 @@ import (
 	"testing"
 )
 
+func TestGroupByLevel(t *testing.T) {
+
+}
+
 func TestCalculateStatistics(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -19,10 +23,16 @@ func TestCalculateStatistics(t *testing.T) {
 			wantError:      true,
 		},
 		{
-			name:           "single game score",
-			input:          []GameScore{{Player: "alex", Score: 10, Level: 2}},
-			wantStatistics: Statistics{TotalGamesPlayed: 1, TotalScore: 10, MinimumScore: 10, MaximumScore: 10, MedianScore: 10, AverageScore: 10, AverageScoreByLevel: map[int]float64{2: 10.}},
-			wantError:      false,
+			name:  "single game score",
+			input: []GameScore{{Player: Player{name: "alex", id: 1}, Score: 10, Level: 2}},
+			wantStatistics: Statistics{
+				TotalGamesPlayed: 1,
+				TotalScore:       10,
+				MinimumScore:     10,
+				MaximumScore:     10,
+				MedianScore:      10,
+				AverageScore:     10},
+			wantError: false,
 		},
 	}
 	for _, test := range tests {
