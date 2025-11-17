@@ -4,12 +4,12 @@ A Go CLI application for analyzing game score statistics. Reads game score data 
 
 ## Features
 
-- Read game scores from JSON files
+- Read game scores from JSON files with player information (name and ID)
 - Calculate comprehensive statistics:
   - Total games played and total score
   - Average, median, minimum, and maximum scores
   - Average score by level
-- Group scores by player level
+- Group scores by player level or by player
 - JSON-based data format for easy integration
 
 ## Getting Started
@@ -53,9 +53,12 @@ The application expects JSON input in the following format:
 ```json
 [
   {
-    "Player": "PlayerName",
-    "Score": 85,
-    "Level": 3
+    "player": {
+      "name": "Alice",
+      "id": 1
+    },
+    "score": 85,
+    "level": 3
   }
 ]
 ```
@@ -87,10 +90,12 @@ See `data/README.md` for more details about the sample data structure.
 ## Key Packages and Functions
 
 ### internal/stats
-- `GameScore`: Type representing individual game score entries (Player, Score, Level)
+- `Player`: Type representing a player with name and ID fields
+- `GameScore`: Type representing individual game score entries (contains Player struct, Score, Level)
 - `Statistics`: Type holding calculated statistics from score data
 - `CalculateStatistics(scores []GameScore) (Statistics, error)`: Calculates comprehensive statistics
 - `GroupByLevel(scores []GameScore) map[int][]GameScore`: Groups scores by level for analysis
+- `GroupByPlayer(scores []GameScore) map[Player][]GameScore`: Groups scores by player for analysis
 
 ### internal/reader
 - `ReadScoresFromFile(filename string) ([]GameScore, error)`: Reads and parses game scores from JSON file
