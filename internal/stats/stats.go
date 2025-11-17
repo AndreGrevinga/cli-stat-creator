@@ -28,14 +28,6 @@ type Statistics struct {
 	MedianScore, AverageScore                                float64
 }
 
-type LevelStatistics struct {
-	Level int
-}
-
-type PlayerStatistics struct {
-	Player string
-}
-
 // CalculateStatistics computes comprehensive statistics from a slice of game scores.
 // It calculates total games, total score, minimum, maximum, average, median,
 // and average scores grouped by level.
@@ -91,4 +83,32 @@ func GroupByPlayer(scores []GameScore) map[Player][]GameScore {
 		resultMap[gameScore.Player] = slice
 	}
 	return resultMap
+}
+
+// CalculateStatisticsByLevel computes statistics for each level separately.
+// Returns a map of level numbers to their statistics, or an error if any level has no scores.
+func CalculateStatisticsByLevel(scores []GameScore) (map[int]Statistics, error) {
+	result := make(map[int]Statistics)
+	for level, levelScores := range GroupByLevel(scores) {
+		levelStats, err := CalculateStatistics(levelScores)
+		if err != nil {
+			return nil, err
+		}
+		result[level] = levelStats
+	}
+	return result, nil
+}
+
+// CalculateStatisticsByPlayer computes statistics for each player separately.
+// Returns a map of players to their statistics, or an error if any player has no scores.
+func CalculateStatisticsByPlayer(scores []GameScore) (map[Player]Statistics, error) {
+	result := make(map[Player]Statistics)
+	for player, playerScores := range GroupByPlayer(scores) {
+		playerStats, err := CalculateStatistics(playerScores)
+		if err != nil {
+			return nil, err
+		}
+		result[player] = playerStats
+	}
+	return result, nil
 }

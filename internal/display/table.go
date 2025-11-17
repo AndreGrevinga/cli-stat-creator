@@ -6,6 +6,7 @@ import (
 	"cli-stat-creator/internal/stats"
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/olekukonko/tablewriter"
 )
@@ -24,24 +25,75 @@ func RenderStatistics(s stats.Statistics) {
 	table.Render()
 }
 
-// RenderLevelBreakdown displays average scores grouped by level in a formatted table.
-// It renders each level number along with its corresponding average score to stdout.
-// The order of levels displayed is non-deterministic due to map iteration.
-// TODO: Reimplemented per-level statistics in different way
-/*
-func RenderLevelBreakdown(s stats.Statistics) {
+func RenderLevelStatistics(statistics map[int]stats.Statistics, detailed bool) {
 	table := tablewriter.NewTable(os.Stdout)
-
-	levels := make([]int, 0, len(s.AverageScoreByLevel))
-	for level := range s.AverageScoreByLevel {
-		levels = append(levels, level)
+	var header, data []string
+	if detailed {
+		header = []string{"Level", "GamesPlayed", "TotalScore", "AverageScore", "MedianScore", "MinimumScore", "MaximumScore"}
+	} else {
+		header = []string{"Level", "GamesPlayed", "AverageScore", "MaximumScore"}
 	}
-	slices.Sort(levels)
-	table.Header([]string{"Level", "Average Score"})
-	for _, level := range levels {
-		averageScore := s.AverageScoreByLevel[level]
-		table.Append([]string{fmt.Sprintf("%d", level), fmt.Sprintf("%.2f", averageScore)})
+	table.Header(header)
+	sortedLevels := make([]int, 0, len(statistics))
+	for level, _ := range statistics {
+		sortedLevels = append(sortedLevels, level)
+	}
+	slices.Sort(sortedLevels)
+	for _, level := range sortedLevels {
+		stats := statistics[level]
+		if detailed {
+			data = []string{
+				fmt.Sprintf("%d", level),
+				fmt.Sprintf("%d", stats.TotalGamesPlayed), fmt.Sprintf("%d", stats.TotalScore),
+				fmt.Sprintf("%.2f", stats.AverageScore), fmt.Sprintf("%.2f", stats.MedianScore),
+				fmt.Sprintf("%d", stats.MinimumScore), fmt.Sprintf("%d", stats.MaximumScore),
+			}
+		} else {
+			data = []string{
+				fmt.Sprintf("%d", level), fmt.Sprintf("%d", stats.TotalGamesPlayed),
+				fmt.Sprintf("%.2f", stats.AverageScore), fmt.Sprintf("%d", stats.MaximumScore)}
+		}
+		table.Append(data)
 	}
 	table.Render()
 }
-*/
+
+func RenderPlayerStatistics(statistics map[stats.Player]stats.Statistics, detailed bool) {
+	table := tablewriter.NewTable(os.Stdout)
+	var header, data []string
+	if detailed {
+		header = []string{"Player", "GamesPlayed", "TotalScore", "AverageScore", "MedianScore", "MinimumScore", "MaximumScore"}
+	} else {
+		header = []string{"Player", "GamesPlayed", "AverageScore", "MaximumScore"}
+	}
+	table.Header(header)
+	sortedPlayers := make([]stats.Player, 0, len(statistics))
+	for player, _ := range statistics {
+		sortedPlayers = append(sortedPlayers, player)
+	}
+	slices.SortFunc(sortedPlayers, func(a, b stats.Player) int {
+		if a.Name < b.Name {
+			return -1
+		} else if a.Name > b.Name {
+			return 1
+		}
+		return 0
+	})
+	for _, player := range sortedPlayers {
+		stats := statistics[player]
+		if detailed {
+			data = []string{
+				player.Name,
+				fmt.Sprintf("%d", stats.TotalGamesPlayed), fmt.Sprintf("%d", stats.TotalScore),
+				fmt.Sprintf("%.2f", stats.AverageScore), fmt.Sprintf("%.2f", stats.MedianScore),
+				fmt.Sprintf("%d", stats.MinimumScore), fmt.Sprintf("%d", stats.MaximumScore),
+			}
+		} else {
+			data = []string{
+				player.Name, fmt.Sprintf("%d", stats.TotalGamesPlayed),
+				fmt.Sprintf("%.2f", stats.AverageScore), fmt.Sprintf("%d", stats.MaximumScore)}
+		}
+		table.Append(data)
+	}
+	table.Render()
+}

@@ -7,7 +7,7 @@ This is a CLI application for analyzing game score statistics. It reads JSON fil
 
 ## Build/Run/Test Commands
 - Build: `go build -o cli-stat-creator ./cmd/cli-stat-creator`
-- Run: `go run ./cmd/cli-stat-creator`
+- Run: `go run ./cmd/cli-stat-creator -i`
 - Test: `go test ./...`
 - Test single file: `go test -v path/to/file_test.go`
 - Format code: `gofmt -w .`
