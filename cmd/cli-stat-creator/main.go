@@ -12,10 +12,10 @@ import (
 )
 
 var (
-	detailed     = flag.Bool("detailed", false, "Show all statistics columns")
+	detailed     bool
+	defaultInput bool
 	noPlayers    = flag.Bool("no-players", false, "Hide player statistics")
 	noLevels     = flag.Bool("no-levels", false, "Hide level statistics")
-	defaultInput = flag.Bool("default-input", false, "Uses the default input.json")
 )
 
 // main is the entry point of the application.
@@ -23,14 +23,16 @@ var (
 // and displays the results in formatted tables including overall statistics
 // and per-level average scores.
 func main() {
-	flag.BoolVar(detailed, "d", false, "Show all statistics columns (shorthand)")
-	flag.BoolVar(defaultInput, "i", false, "Uses the default input.json (shorthand)")
+	flag.BoolVar(&detailed, "detailed", false, "Show all statistics columns")
+	flag.BoolVar(&detailed, "d", false, "Show all statistics columns (shorthand)")
+	flag.BoolVar(&defaultInput, "i", false, "Uses the default input.json (shorthand)")
+	flag.BoolVar(&defaultInput, "default-input", false, "Uses the default input.json")
 	flag.Parse()
-	fmt.Println("Please input the file path to analyze")
 	var filepath string
-	if *defaultInput {
+	if defaultInput {
 		filepath = "data/input.json"
 	} else {
+		fmt.Println("Please input the file path to analyze")
 		fmt.Scan(&filepath)
 	}
 	gameScores, err := reader.ReadScoresFromFile(filepath)
@@ -62,10 +64,10 @@ func main() {
 	display.RenderStatistics(statistics)
 	if !*noPlayers {
 		fmt.Println("\nPlayer Statistics:")
-		display.RenderPlayerStatistics(playerGroupedStatistics, *detailed)
+		display.RenderPlayerStatistics(playerGroupedStatistics, detailed)
 	}
 	if !*noLevels {
 		fmt.Println("\nLevel Statistics:")
-		display.RenderLevelStatistics(levelGroupedStatistics, *detailed)
+		display.RenderLevelStatistics(levelGroupedStatistics, detailed)
 	}
 }

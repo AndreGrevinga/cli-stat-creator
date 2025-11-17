@@ -8,6 +8,8 @@ import (
 	"slices"
 )
 
+// Player represents a game player with a unique identifier.
+// It contains the player's name and a numeric ID to distinguish players with the same name.
 type Player struct {
 	Name string `json:"name"`
 	ID   int    `json:"id"`
@@ -76,6 +78,9 @@ func GroupByLevel(scores []GameScore) map[int][]GameScore {
 	return resultMap
 }
 
+// GroupByPlayer organizes game scores into a map grouped by player.
+// The returned map uses Player structs as keys and slices of GameScore as values.
+// This is useful for calculating per-player statistics.
 func GroupByPlayer(scores []GameScore) map[Player][]GameScore {
 	resultMap := make(map[Player][]GameScore)
 	for _, gameScore := range scores {

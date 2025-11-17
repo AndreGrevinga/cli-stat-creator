@@ -53,20 +53,28 @@ This is a CLI application for analyzing game score statistics. It reads JSON fil
 ## Key Packages and Functions
 
 ### internal/stats
+- `Player`: Type representing a game player with name and unique ID
 - `GameScore`: Type representing individual game score entries (Player, Score, Level)
 - `Statistics`: Type holding calculated statistics from score data
-- `CalculateStatistics(scores []GameScore) (Statistics, error)`: Calculates comprehensive statistics including totals, averages, medians, and per-level breakdowns
+- `CalculateStatistics(scores []GameScore) (Statistics, error)`: Calculates comprehensive statistics including totals, averages, medians
 - `GroupByLevel(scores []GameScore) map[int][]GameScore`: Groups scores by level for analysis
+- `GroupByPlayer(scores []GameScore) map[Player][]GameScore`: Groups scores by player for analysis
+- `CalculateStatisticsByLevel(scores []GameScore) (map[int]Statistics, error)`: Calculates statistics for each level separately
+- `CalculateStatisticsByPlayer(scores []GameScore) (map[Player]Statistics, error)`: Calculates statistics for each player separately
 
 ### internal/reader
 - `ReadScoresFromFile(filename string) ([]GameScore, error)`: Reads and parses game scores from JSON file
 
 ### internal/display
 - `RenderStatistics(s Statistics)`: Renders overall statistics table to stdout
-- `RenderLevelBreakdown(s Statistics)`: Renders per-level average scores table to stdout
+- `RenderGroupedStatistics[K comparable](...)`: Generic function for rendering statistics grouped by any comparable key type (used by level and player renderers)
+- `RenderLevelStatistics(statistics map[int]Statistics, detailed bool)`: Renders per-level statistics table to stdout with optional detailed view
+- `RenderPlayerStatistics(statistics map[Player]Statistics, detailed bool)`: Renders per-player statistics table to stdout with optional detailed view
 
 ## Data Format
 Input JSON should contain an array of game score objects with fields:
-- `Player` (string): Player name
+- `Player` (object): Player information
+  - `name` (string): Player name
+  - `id` (int): Unique player identifier
 - `Score` (int): Game score value
-- `Level` (int): Player level
+- `Level` (int): Game level
