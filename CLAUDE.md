@@ -16,7 +16,8 @@ This is a CLI application for analyzing game score statistics. It reads JSON fil
 - **Imports**: Group standard library imports first, followed by third-party imports
 - **Formatting**: Follow Go standard formatting with `gofmt`
 - **Types**: Use clear type definitions with descriptive field names and JSON tags
-  - `GameScore`: Represents individual game score entries (Player, Score, Level)
+  - `Player`: Represents a player with name and ID fields
+  - `GameScore`: Represents individual game score entries (contains Player struct, Score, Level)
   - `Statistics`: Holds calculated statistics from score data
 - **Naming**:
   - Use CamelCase for exported identifiers
@@ -53,10 +54,12 @@ This is a CLI application for analyzing game score statistics. It reads JSON fil
 ## Key Packages and Functions
 
 ### internal/stats
-- `GameScore`: Type representing individual game score entries (Player, Score, Level)
+- `Player`: Type representing a player with name and ID fields
+- `GameScore`: Type representing individual game score entries (contains Player struct, Score, Level)
 - `Statistics`: Type holding calculated statistics from score data
 - `CalculateStatistics(scores []GameScore) (Statistics, error)`: Calculates comprehensive statistics including totals, averages, medians, and per-level breakdowns
 - `GroupByLevel(scores []GameScore) map[int][]GameScore`: Groups scores by level for analysis
+- `GroupByPlayer(scores []GameScore) map[Player][]GameScore`: Groups scores by player for analysis
 
 ### internal/reader
 - `ReadScoresFromFile(filename string) ([]GameScore, error)`: Reads and parses game scores from JSON file
@@ -67,6 +70,8 @@ This is a CLI application for analyzing game score statistics. It reads JSON fil
 
 ## Data Format
 Input JSON should contain an array of game score objects with fields:
-- `Player` (string): Player name
-- `Score` (int): Game score value
-- `Level` (int): Player level
+- `player` (object): Player information containing:
+  - `name` (string): Player name
+  - `id` (int): Unique player identifier
+- `score` (int): Game score value
+- `level` (int): Player level

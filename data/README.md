@@ -12,7 +12,10 @@ Sample game score data in JSON format.
 ```json
 [
   {
-    "player": "string",  // Player name
+    "player": {
+      "name": "string",  // Player name
+      "id": number       // Player ID (integer)
+    },
     "score": number,     // Game score (integer)
     "level": number      // Player level (integer)
   }
@@ -20,7 +23,9 @@ Sample game score data in JSON format.
 ```
 
 **Field Definitions:**
-- `player`: Unique player identifier/name
+- `player`: Player object containing:
+  - `name`: Player's name (string)
+  - `id`: Unique player identifier (positive integer)
 - `score`: Game score value (no strict min/max, typically 0-100 range)
 - `level`: Player's current level (positive integer)
 
@@ -32,7 +37,7 @@ This sample data can be used to test statistical calculations such as:
 - Level distribution statistics
 
 **Data Characteristics:**
-- Contains 10 sample records
+- Contains 40 sample records
 - Score range: 67-98
-- Level range: 2-5
-- Balanced distribution across levels
+- Level range: 2-6
+- Balanced distribution across levels and players
