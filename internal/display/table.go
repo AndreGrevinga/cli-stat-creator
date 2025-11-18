@@ -12,10 +12,10 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-const DefaultPrecision = 2
+const defaultPrecision = 2
 
 func formatFloat(f float64) string {
-	return strconv.FormatFloat(f, 'f', DefaultPrecision, 64)
+	return strconv.FormatFloat(f, 'f', defaultPrecision, 64)
 }
 
 // RenderStatistics displays overall game statistics in a formatted table.

@@ -4,7 +4,6 @@ package reader
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -18,7 +17,7 @@ import (
 func ReadScoresFromFile(filename string) ([]stats.GameScore, error) {
 	var gameScores []stats.GameScore
 	if !strings.HasSuffix(strings.ToLower(filename), ".json") {
-		return nil, errors.New("file must have .json extension")
+		return nil, fmt.Errorf("file '%s' must have .json extension", filename)
 	}
 	data, err := os.ReadFile(filename)
 	if err != nil {

@@ -34,14 +34,14 @@ func (g GameScore) Validate() error {
 	if g.Player.Name == "" {
 		return errors.New("player name cannot be empty")
 	}
+	if g.Player.ID <= 0 {
+		return errors.New("player id must be positive")
+	}
 	if g.Score < 0 {
 		return errors.New("score cannot be negative")
 	}
 	if g.Level <= 0 {
 		return errors.New("level must be positive")
-	}
-	if g.Player.ID <= 0 {
-		return errors.New("player id must be positive")
 	}
 	return nil
 }
