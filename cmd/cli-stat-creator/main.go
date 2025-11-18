@@ -14,19 +14,21 @@ import (
 var (
 	detailed     bool
 	defaultInput bool
-	noPlayers    = flag.Bool("no-players", false, "Hide player statistics")
-	noLevels     = flag.Bool("no-levels", false, "Hide level statistics")
+	noPlayers    bool
+	noLevels     bool
 )
 
 // main is the entry point of the application.
-// It reads game scores from a JSON file (data/input.json), calculates statistics,
-// and displays the results in formatted tables including overall statistics
-// and per-level average scores.
+// It reads game scores from a JSON file (configurable via -i flag or user input),
+// calculates statistics, and displays the results in formatted tables including
+// overall statistics, per-player, and per-level average scores.
 func main() {
 	flag.BoolVar(&detailed, "detailed", false, "Show all statistics columns")
 	flag.BoolVar(&detailed, "d", false, "Show all statistics columns (shorthand)")
-	flag.BoolVar(&defaultInput, "i", false, "Uses the default input.json (shorthand)")
-	flag.BoolVar(&defaultInput, "default-input", false, "Uses the default input.json")
+	flag.BoolVar(&defaultInput, "i", false, "Use the default input.json (shorthand)")
+	flag.BoolVar(&defaultInput, "default-input", false, "Use the default input.json")
+	flag.BoolVar(&noPlayers, "no-players", false, "Hide player statistics")
+	flag.BoolVar(&noLevels, "no-levels", false, "Hide level statistics")
 	flag.Parse()
 	var filepath string
 	if defaultInput {
@@ -41,7 +43,7 @@ func main() {
 		return
 	}
 	var levelGroupedStatistics map[int]stats.Statistics
-	if !*noLevels {
+	if !noLevels {
 		levelGroupedStatistics, err = stats.CalculateStatisticsByLevel(gameScores)
 		if err != nil {
 			fmt.Println("Error calculating level statistics:", err)
@@ -49,7 +51,7 @@ func main() {
 		}
 	}
 	var playerGroupedStatistics map[stats.Player]stats.Statistics
-	if !*noPlayers {
+	if !noPlayers {
 		playerGroupedStatistics, err = stats.CalculateStatisticsByPlayer(gameScores)
 		if err != nil {
 			fmt.Println("Error calculating player statistics:", err)
@@ -62,11 +64,11 @@ func main() {
 		return
 	}
 	display.RenderStatistics(statistics)
-	if !*noPlayers {
+	if !noPlayers {
 		fmt.Println("\nPlayer Statistics:")
 		display.RenderPlayerStatistics(playerGroupedStatistics, detailed)
 	}
-	if !*noLevels {
+	if !noLevels {
 		fmt.Println("\nLevel Statistics:")
 		display.RenderLevelStatistics(levelGroupedStatistics, detailed)
 	}
