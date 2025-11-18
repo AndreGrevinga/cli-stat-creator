@@ -251,3 +251,205 @@ func TestCalculateStatistics(t *testing.T) {
 		})
 	}
 }
+
+func TestCalculateStatisticsByLevel(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     []GameScore
+		want      map[int]Statistics
+		wantError bool
+	}{
+		{
+			name:      "empty input",
+			input:     []GameScore{},
+			want:      map[int]Statistics{},
+			wantError: false,
+		},
+		{
+			name: "single level with multiple scores",
+			input: []GameScore{
+				{Player: Player{Name: "alex", ID: 1}, Score: 100, Level: 1},
+				{Player: Player{Name: "bob", ID: 2}, Score: 200, Level: 1},
+				{Player: Player{Name: "charlie", ID: 3}, Score: 300, Level: 1},
+			},
+			want: map[int]Statistics{
+				1: {
+					TotalGamesPlayed: 3,
+					TotalScore:       600,
+					MinimumScore:     100,
+					MaximumScore:     300,
+					MedianScore:      200,
+					AverageScore:     200,
+				},
+			},
+			wantError: false,
+		},
+		{
+			name: "multiple levels with varying counts",
+			input: []GameScore{
+				{Player: Player{Name: "alex", ID: 1}, Score: 100, Level: 1},
+				{Player: Player{Name: "bob", ID: 2}, Score: 200, Level: 2},
+				{Player: Player{Name: "charlie", ID: 3}, Score: 150, Level: 1},
+				{Player: Player{Name: "diana", ID: 4}, Score: 300, Level: 3},
+				{Player: Player{Name: "eve", ID: 5}, Score: 250, Level: 2},
+				{Player: Player{Name: "frank", ID: 6}, Score: 350, Level: 3},
+			},
+			want: map[int]Statistics{
+				1: {
+					TotalGamesPlayed: 2,
+					TotalScore:       250,
+					MinimumScore:     100,
+					MaximumScore:     150,
+					MedianScore:      125,
+					AverageScore:     125,
+				},
+				2: {
+					TotalGamesPlayed: 2,
+					TotalScore:       450,
+					MinimumScore:     200,
+					MaximumScore:     250,
+					MedianScore:      225,
+					AverageScore:     225,
+				},
+				3: {
+					TotalGamesPlayed: 2,
+					TotalScore:       650,
+					MinimumScore:     300,
+					MaximumScore:     350,
+					MedianScore:      325,
+					AverageScore:     325,
+				},
+			},
+			wantError: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result, err := CalculateStatisticsByLevel(test.input)
+
+			if (err != nil) != test.wantError {
+				t.Errorf("CalculateStatisticsByLevel() error = %v, wantErr %v", err, test.wantError)
+				return
+			}
+
+			if !reflect.DeepEqual(result, test.want) {
+				t.Errorf("CalculateStatisticsByLevel() = %v, want %v", result, test.want)
+			}
+		})
+	}
+}
+
+func TestCalculateStatisticsByPlayer(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     []GameScore
+		want      map[Player]Statistics
+		wantError bool
+	}{
+		{
+			name:      "empty input",
+			input:     []GameScore{},
+			want:      map[Player]Statistics{},
+			wantError: false,
+		},
+		{
+			name: "single player with multiple scores",
+			input: []GameScore{
+				{Player: Player{Name: "alex", ID: 1}, Score: 100, Level: 1},
+				{Player: Player{Name: "alex", ID: 1}, Score: 200, Level: 2},
+				{Player: Player{Name: "alex", ID: 1}, Score: 300, Level: 3},
+			},
+			want: map[Player]Statistics{
+				{Name: "alex", ID: 1}: {
+					TotalGamesPlayed: 3,
+					TotalScore:       600,
+					MinimumScore:     100,
+					MaximumScore:     300,
+					MedianScore:      200,
+					AverageScore:     200,
+				},
+			},
+			wantError: false,
+		},
+		{
+			name: "multiple players with varying counts",
+			input: []GameScore{
+				{Player: Player{Name: "alex", ID: 1}, Score: 100, Level: 1},
+				{Player: Player{Name: "bob", ID: 2}, Score: 200, Level: 1},
+				{Player: Player{Name: "alex", ID: 1}, Score: 150, Level: 2},
+				{Player: Player{Name: "charlie", ID: 3}, Score: 300, Level: 1},
+				{Player: Player{Name: "bob", ID: 2}, Score: 250, Level: 2},
+			},
+			want: map[Player]Statistics{
+				{Name: "alex", ID: 1}: {
+					TotalGamesPlayed: 2,
+					TotalScore:       250,
+					MinimumScore:     100,
+					MaximumScore:     150,
+					MedianScore:      125,
+					AverageScore:     125,
+				},
+				{Name: "bob", ID: 2}: {
+					TotalGamesPlayed: 2,
+					TotalScore:       450,
+					MinimumScore:     200,
+					MaximumScore:     250,
+					MedianScore:      225,
+					AverageScore:     225,
+				},
+				{Name: "charlie", ID: 3}: {
+					TotalGamesPlayed: 1,
+					TotalScore:       300,
+					MinimumScore:     300,
+					MaximumScore:     300,
+					MedianScore:      300,
+					AverageScore:     300,
+				},
+			},
+			wantError: false,
+		},
+		{
+			name: "players with same name but different IDs",
+			input: []GameScore{
+				{Player: Player{Name: "alex", ID: 1}, Score: 100, Level: 1},
+				{Player: Player{Name: "alex", ID: 2}, Score: 200, Level: 1},
+				{Player: Player{Name: "alex", ID: 1}, Score: 150, Level: 2},
+			},
+			want: map[Player]Statistics{
+				{Name: "alex", ID: 1}: {
+					TotalGamesPlayed: 2,
+					TotalScore:       250,
+					MinimumScore:     100,
+					MaximumScore:     150,
+					MedianScore:      125,
+					AverageScore:     125,
+				},
+				{Name: "alex", ID: 2}: {
+					TotalGamesPlayed: 1,
+					TotalScore:       200,
+					MinimumScore:     200,
+					MaximumScore:     200,
+					MedianScore:      200,
+					AverageScore:     200,
+				},
+			},
+			wantError: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result, err := CalculateStatisticsByPlayer(test.input)
+
+			if (err != nil) != test.wantError {
+				t.Errorf("CalculateStatisticsByPlayer() error = %v, wantErr %v", err, test.wantError)
+				return
+			}
+
+			if !reflect.DeepEqual(result, test.want) {
+				t.Errorf("CalculateStatisticsByPlayer() = %v, want %v", result, test.want)
+			}
+		})
+	}
+}

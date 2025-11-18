@@ -8,6 +8,8 @@ import (
 	"slices"
 )
 
+// Player represents a game player with a unique identifier.
+// It contains the player's name and a numeric ID to distinguish players with the same name.
 type Player struct {
 	Name string `json:"name"`
 	ID   int    `json:"id"`
@@ -26,14 +28,6 @@ type GameScore struct {
 type Statistics struct {
 	TotalGamesPlayed, TotalScore, MinimumScore, MaximumScore int
 	MedianScore, AverageScore                                float64
-}
-
-type LevelStatistics struct {
-	Level int
-}
-
-type PlayerStatistics struct {
-	Player string
 }
 
 // CalculateStatistics computes comprehensive statistics from a slice of game scores.
@@ -84,6 +78,9 @@ func GroupByLevel(scores []GameScore) map[int][]GameScore {
 	return resultMap
 }
 
+// GroupByPlayer organizes game scores into a map grouped by player.
+// The returned map uses Player structs as keys and slices of GameScore as values.
+// This is useful for calculating per-player statistics.
 func GroupByPlayer(scores []GameScore) map[Player][]GameScore {
 	resultMap := make(map[Player][]GameScore)
 	for _, gameScore := range scores {
@@ -91,4 +88,32 @@ func GroupByPlayer(scores []GameScore) map[Player][]GameScore {
 		resultMap[gameScore.Player] = slice
 	}
 	return resultMap
+}
+
+// CalculateStatisticsByLevel computes statistics for each level separately.
+// Returns a map of level numbers to their statistics, or an error if any level has no scores.
+func CalculateStatisticsByLevel(scores []GameScore) (map[int]Statistics, error) {
+	result := make(map[int]Statistics)
+	for level, levelScores := range GroupByLevel(scores) {
+		levelStats, err := CalculateStatistics(levelScores)
+		if err != nil {
+			return nil, err
+		}
+		result[level] = levelStats
+	}
+	return result, nil
+}
+
+// CalculateStatisticsByPlayer computes statistics for each player separately.
+// Returns a map of players to their statistics, or an error if any player has no scores.
+func CalculateStatisticsByPlayer(scores []GameScore) (map[Player]Statistics, error) {
+	result := make(map[Player]Statistics)
+	for player, playerScores := range GroupByPlayer(scores) {
+		playerStats, err := CalculateStatistics(playerScores)
+		if err != nil {
+			return nil, err
+		}
+		result[player] = playerStats
+	}
+	return result, nil
 }

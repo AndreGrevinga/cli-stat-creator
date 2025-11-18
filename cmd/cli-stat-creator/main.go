@@ -7,7 +7,15 @@ import (
 	"cli-stat-creator/internal/display"
 	"cli-stat-creator/internal/reader"
 	"cli-stat-creator/internal/stats"
+	"flag"
 	"fmt"
+)
+
+var (
+	detailed     bool
+	defaultInput bool
+	noPlayers    = flag.Bool("no-players", false, "Hide player statistics")
+	noLevels     = flag.Bool("no-levels", false, "Hide level statistics")
 )
 
 // main is the entry point of the application.
@@ -15,15 +23,38 @@ import (
 // and displays the results in formatted tables including overall statistics
 // and per-level average scores.
 func main() {
-	fmt.Println("Please input the file path to analyze")
+	flag.BoolVar(&detailed, "detailed", false, "Show all statistics columns")
+	flag.BoolVar(&detailed, "d", false, "Show all statistics columns (shorthand)")
+	flag.BoolVar(&defaultInput, "i", false, "Uses the default input.json (shorthand)")
+	flag.BoolVar(&defaultInput, "default-input", false, "Uses the default input.json")
+	flag.Parse()
 	var filepath string
-	//Todo: remove comment, is just here to make debugging easier
-	//fmt.Scan(&filepath)
-	filepath = "data/input.json"
+	if defaultInput {
+		filepath = "data/input.json"
+	} else {
+		fmt.Println("Please input the file path to analyze")
+		fmt.Scan(&filepath)
+	}
 	gameScores, err := reader.ReadScoresFromFile(filepath)
 	if err != nil {
 		fmt.Println("Error reading file:", err)
 		return
+	}
+	var levelGroupedStatistics map[int]stats.Statistics
+	if !*noLevels {
+		levelGroupedStatistics, err = stats.CalculateStatisticsByLevel(gameScores)
+		if err != nil {
+			fmt.Println("Error calculating level statistics:", err)
+			return
+		}
+	}
+	var playerGroupedStatistics map[stats.Player]stats.Statistics
+	if !*noPlayers {
+		playerGroupedStatistics, err = stats.CalculateStatisticsByPlayer(gameScores)
+		if err != nil {
+			fmt.Println("Error calculating player statistics:", err)
+			return
+		}
 	}
 	statistics, err := stats.CalculateStatistics(gameScores)
 	if err != nil {
@@ -31,6 +62,12 @@ func main() {
 		return
 	}
 	display.RenderStatistics(statistics)
-	// TODO: Reimplemented per-level statistics in different way
-	// display.RenderLevelBreakdown(statistics)
+	if !*noPlayers {
+		fmt.Println("\nPlayer Statistics:")
+		display.RenderPlayerStatistics(playerGroupedStatistics, detailed)
+	}
+	if !*noLevels {
+		fmt.Println("\nLevel Statistics:")
+		display.RenderLevelStatistics(levelGroupedStatistics, detailed)
+	}
 }
