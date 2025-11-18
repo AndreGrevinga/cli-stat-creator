@@ -16,7 +16,8 @@ This is a CLI application for analyzing game score statistics. It reads JSON fil
 - **Imports**: Group standard library imports first, followed by third-party imports
 - **Formatting**: Follow Go standard formatting with `gofmt`
 - **Types**: Use clear type definitions with descriptive field names and JSON tags
-  - `GameScore`: Represents individual game score entries (Player, Score, Level)
+  - `Player`: Represents a player with name and ID fields
+  - `GameScore`: Represents individual game score entries (contains Player struct, Score, Level)
   - `Statistics`: Holds calculated statistics from score data
 - **Naming**:
   - Use CamelCase for exported identifiers
