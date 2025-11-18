@@ -57,6 +57,7 @@ This is a CLI application for analyzing game score statistics. It reads JSON fil
 - `Player`: Type representing a game player with name and unique ID
 - `GameScore`: Type representing individual game score entries (Player, Score, Level)
 - `Statistics`: Type holding calculated statistics from score data
+- `(g GameScore) Validate() error`: Validates game score fields (player name not empty, score non-negative, level and player ID positive)
 - `CalculateStatistics(scores []GameScore) (Statistics, error)`: Calculates comprehensive statistics including totals, averages, medians
 - `GroupByLevel(scores []GameScore) map[int][]GameScore`: Groups scores by level for analysis
 - `GroupByPlayer(scores []GameScore) map[Player][]GameScore`: Groups scores by player for analysis
@@ -64,7 +65,7 @@ This is a CLI application for analyzing game score statistics. It reads JSON fil
 - `CalculateStatisticsByPlayer(scores []GameScore) (map[Player]Statistics, error)`: Calculates statistics for each player separately
 
 ### internal/reader
-- `ReadScoresFromFile(filename string) ([]GameScore, error)`: Reads and parses game scores from JSON file
+- `ReadScoresFromFile(filename string) ([]GameScore, error)`: Reads and parses game scores from JSON file (validates .json extension and all game scores)
 
 ### internal/display
 - `RenderStatistics(s Statistics)`: Renders overall statistics table to stdout
@@ -75,7 +76,7 @@ This is a CLI application for analyzing game score statistics. It reads JSON fil
 ## Data Format
 Input JSON should contain an array of game score objects with fields:
 - `Player` (object): Player information
-  - `name` (string): Player name
-  - `id` (int): Unique player identifier
-- `Score` (int): Game score value
-- `Level` (int): Game level
+  - `name` (string): Player name (required, cannot be empty)
+  - `id` (int): Unique player identifier (must be positive)
+- `Score` (int): Game score value (must be non-negative)
+- `Level` (int): Game level (must be positive)
