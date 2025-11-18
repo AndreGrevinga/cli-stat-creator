@@ -40,6 +40,9 @@ func (g GameScore) Validate() error {
 	if g.Level <= 0 {
 		return errors.New("level must be positive")
 	}
+	if g.Player.ID <= 0 {
+		return errors.New("player id must be positive")
+	}
 	return nil
 }
 

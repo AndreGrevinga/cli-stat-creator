@@ -17,7 +17,7 @@ import (
 // Returns an error if the file cannot be read or if the JSON format is invalid.
 func ReadScoresFromFile(filename string) ([]stats.GameScore, error) {
 	var gameScores []stats.GameScore
-	if !strings.HasSuffix(filename, ".json") {
+	if !strings.HasSuffix(strings.ToLower(filename), ".json") {
 		return nil, errors.New("file must have .json extension")
 	}
 	data, err := os.ReadFile(filename)

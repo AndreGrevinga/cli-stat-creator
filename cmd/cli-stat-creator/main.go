@@ -18,7 +18,7 @@ var (
 	noLevels     = flag.Bool("no-levels", false, "Hide level statistics")
 )
 
-const DefaultInputFile = "data/input.json"
+const defaultInputFile = "data/input.json"
 
 // main is the entry point of the application.
 // It reads game scores from a JSON file (data/input.json), calculates statistics,
@@ -32,7 +32,7 @@ func main() {
 	flag.Parse()
 	var filepath string
 	if defaultInput {
-		filepath = DefaultInputFile
+		filepath = defaultInputFile
 	} else {
 		fmt.Println("Please input the file path to analyze")
 		fmt.Scan(&filepath)
