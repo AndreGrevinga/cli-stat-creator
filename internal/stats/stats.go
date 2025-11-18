@@ -30,6 +30,19 @@ type Statistics struct {
 	MedianScore, AverageScore                                float64
 }
 
+func (g GameScore) Validate() error {
+	if g.Player.Name == "" {
+		return errors.New("player name cannot be empty")
+	}
+	if g.Score < 0 {
+		return errors.New("score cannot be negative")
+	}
+	if g.Level <= 0 {
+		return errors.New("level must be positive")
+	}
+	return nil
+}
+
 // CalculateStatistics computes comprehensive statistics from a slice of game scores.
 // It calculates total games, total score, minimum, maximum, average, median,
 // and average scores grouped by level.

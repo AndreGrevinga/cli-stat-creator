@@ -78,7 +78,7 @@ func TestReadScoresFromFile(t *testing.T) {
 			want: []stats.GameScore{
 				{Player: stats.Player{Name: "alice", ID: 0}, Score: 100, Level: 0},
 			},
-			wantError: false, // JSON unmarshaling uses zero values for missing fields
+			wantError: true, // JSON unmarshaling uses zero values for missing fields
 		},
 	}
 

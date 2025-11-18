@@ -7,9 +7,16 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strconv"
 
 	"github.com/olekukonko/tablewriter"
 )
+
+const DefaultPrecision = 2
+
+func formatFloat(f float64) string {
+	return strconv.FormatFloat(f, 'f', DefaultPrecision, 64)
+}
 
 // RenderStatistics displays overall game statistics in a formatted table.
 // It renders total games played, total score, average score, median score,
@@ -18,9 +25,12 @@ func RenderStatistics(s stats.Statistics) {
 	table := tablewriter.NewTable(os.Stdout)
 	table.Header([]string{"TotalGamesPlayed", "TotalScore", "AverageScore", "MedianScore", "MinimumScore", "MaximumScore"})
 	table.Append([]string{
-		fmt.Sprintf("%d", s.TotalGamesPlayed), fmt.Sprintf("%d", s.TotalScore),
-		fmt.Sprintf("%.2f", s.AverageScore), fmt.Sprintf("%.2f", s.MedianScore),
-		fmt.Sprintf("%d", s.MinimumScore), fmt.Sprintf("%d", s.MaximumScore),
+		fmt.Sprintf("%d", s.TotalGamesPlayed),
+		fmt.Sprintf("%d", s.TotalScore),
+		formatFloat(s.AverageScore),
+		formatFloat(s.MedianScore),
+		fmt.Sprintf("%d", s.MinimumScore),
+		fmt.Sprintf("%d", s.MaximumScore),
 	})
 	table.Render()
 }
@@ -63,8 +73,8 @@ func RenderGroupedStatistics[K comparable](
 				formatKey(key),
 				fmt.Sprintf("%d", s.TotalGamesPlayed),
 				fmt.Sprintf("%d", s.TotalScore),
-				fmt.Sprintf("%.2f", s.AverageScore),
-				fmt.Sprintf("%.2f", s.MedianScore),
+				formatFloat(s.AverageScore),
+				formatFloat(s.MedianScore),
 				fmt.Sprintf("%d", s.MinimumScore),
 				fmt.Sprintf("%d", s.MaximumScore),
 			}
@@ -72,7 +82,7 @@ func RenderGroupedStatistics[K comparable](
 			data = []string{
 				formatKey(key),
 				fmt.Sprintf("%d", s.TotalGamesPlayed),
-				fmt.Sprintf("%.2f", s.AverageScore),
+				formatFloat(s.AverageScore),
 				fmt.Sprintf("%d", s.MaximumScore),
 			}
 		}
