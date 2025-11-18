@@ -5,6 +5,77 @@ import (
 	"testing"
 )
 
+func TestGameScore_Validate(t *testing.T) {
+	tests := []struct {
+		name      string
+		score     GameScore
+		wantError bool
+		errorMsg  string
+	}{
+		{
+			name:      "valid game score",
+			score:     GameScore{Player: Player{Name: "alice", ID: 1}, Score: 100, Level: 1},
+			wantError: false,
+		},
+		{
+			name:      "empty player name",
+			score:     GameScore{Player: Player{Name: "", ID: 1}, Score: 100, Level: 1},
+			wantError: true,
+			errorMsg:  "player name cannot be empty",
+		},
+		{
+			name:      "negative score",
+			score:     GameScore{Player: Player{Name: "alice", ID: 1}, Score: -1, Level: 1},
+			wantError: true,
+			errorMsg:  "score cannot be negative",
+		},
+		{
+			name:      "zero score is valid",
+			score:     GameScore{Player: Player{Name: "alice", ID: 1}, Score: 0, Level: 1},
+			wantError: false,
+		},
+		{
+			name:      "zero level",
+			score:     GameScore{Player: Player{Name: "alice", ID: 1}, Score: 100, Level: 0},
+			wantError: true,
+			errorMsg:  "level must be positive",
+		},
+		{
+			name:      "negative level",
+			score:     GameScore{Player: Player{Name: "alice", ID: 1}, Score: 100, Level: -1},
+			wantError: true,
+			errorMsg:  "level must be positive",
+		},
+		{
+			name:      "zero player ID",
+			score:     GameScore{Player: Player{Name: "alice", ID: 0}, Score: 100, Level: 1},
+			wantError: true,
+			errorMsg:  "player id must be positive",
+		},
+		{
+			name:      "negative player ID",
+			score:     GameScore{Player: Player{Name: "alice", ID: -1}, Score: 100, Level: 1},
+			wantError: true,
+			errorMsg:  "player id must be positive",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := test.score.Validate()
+
+			if (err != nil) != test.wantError {
+				t.Errorf("Validate() error = %v, wantError %v", err, test.wantError)
+				return
+			}
+
+			if test.wantError && err.Error() != test.errorMsg {
+				t.Errorf("Validate() error = %q, want %q", err.Error(), test.errorMsg)
+			}
+		})
+	}
+}
+
 func TestGroupByPlayer(t *testing.T) {
 	tests := []struct {
 		name  string

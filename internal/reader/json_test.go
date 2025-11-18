@@ -121,6 +121,65 @@ func TestReadScoresFromFile_NonExistentFile(t *testing.T) {
 	}
 }
 
+func TestReadScoresFromFile_FileExtension(t *testing.T) {
+	tests := []struct {
+		name      string
+		filename  string
+		wantError bool
+	}{
+		{
+			name:      "lowercase .json",
+			filename:  "test.json",
+			wantError: false,
+		},
+		{
+			name:      "uppercase .JSON",
+			filename:  "test.JSON",
+			wantError: false,
+		},
+		{
+			name:      "mixed case .Json",
+			filename:  "test.Json",
+			wantError: false,
+		},
+		{
+			name:      "wrong extension .txt",
+			filename:  "test.txt",
+			wantError: true,
+		},
+		{
+			name:      "no extension",
+			filename:  "test",
+			wantError: true,
+		},
+		{
+			name:      "json in name but wrong extension",
+			filename:  "json.txt",
+			wantError: true,
+		},
+	}
+
+	validContent := `[{"player": {"name": "alice", "id": 1}, "score": 100, "level": 1}]`
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			tmpFile := filepath.Join(tmpDir, test.filename)
+
+			err := os.WriteFile(tmpFile, []byte(validContent), 0644)
+			if err != nil {
+				t.Fatalf("Failed to create test file: %v", err)
+			}
+
+			_, err = ReadScoresFromFile(tmpFile)
+
+			if (err != nil) != test.wantError {
+				t.Errorf("ReadScoresFromFile(%s) error = %v, wantError %v", test.filename, err, test.wantError)
+			}
+		})
+	}
+}
+
 func TestReadScoresFromFile_ComplexData(t *testing.T) {
 	tmpDir := t.TempDir()
 	tmpFile := filepath.Join(tmpDir, "complex_scores.json")
