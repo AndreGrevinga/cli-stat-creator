@@ -23,12 +23,22 @@ This is a CLI application for analyzing game score statistics. It reads JSON fil
   - Use CamelCase for exported identifiers
   - Use descriptive names for functions and variables
   - Prefix interface names with verb or adjective (e.g., `Reader`)
+  - Use short names for short scopes (e.g., `i` for loop indices, `n` for counts)
+  - Accept common Go abbreviations: `err`, `ctx`, `buf`, `req`, `resp`, `src`, `dst`, `msg`, `cfg`
+  - Avoid abbreviations outside of these standard idioms; prefer full words for clarity
 - **Error Handling**:
   - Always check errors with proper context (e.g., `fmt.Errorf("context: %w", err)`)
   - Return errors instead of logging in functions
   - All file operations should return errors for proper handling
 - **Comments**: Follow Go standard with `//` for line comments and `/* */` for package documentation
   - Use complete sentences with proper punctuation
+
+## Code Review Guidelines
+When reviewing or implementing larger changes:
+- **Documentation Updates**: Check if README.md, CLAUDE.md, or other documentation needs to be updated to reflect the changes
+- **Go Doc Comments**: Ensure every exported function, type, and struct has appropriate Go doc documentation
+  - Doc comments should start with the identifier name
+  - Use complete sentences that describe what the function/type does
 
 ## Project Structure
 ```
