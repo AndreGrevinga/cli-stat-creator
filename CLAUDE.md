@@ -30,6 +30,13 @@ This is a CLI application for analyzing game score statistics. It reads JSON fil
 - **Comments**: Follow Go standard with `//` for line comments and `/* */` for package documentation
   - Use complete sentences with proper punctuation
 
+## Code Review Guidelines
+When reviewing or implementing larger changes:
+- **Documentation Updates**: Check if README.md, CLAUDE.md, or other documentation needs to be updated to reflect the changes
+- **Go Doc Comments**: Ensure every exported function, type, and struct has appropriate Go doc documentation
+  - Doc comments should start with the identifier name
+  - Use complete sentences that describe what the function/type does
+
 ## Project Structure
 ```
 .
