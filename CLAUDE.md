@@ -23,6 +23,9 @@ This is a CLI application for analyzing game score statistics. It reads JSON fil
   - Use CamelCase for exported identifiers
   - Use descriptive names for functions and variables
   - Prefix interface names with verb or adjective (e.g., `Reader`)
+  - Use short names for short scopes (e.g., `i` for loop indices, `n` for counts)
+  - Accept common Go abbreviations: `err`, `ctx`, `buf`, `req`, `resp`, `src`, `dst`, `msg`, `cfg`
+  - Avoid abbreviations outside of these standard idioms; prefer full words for clarity
 - **Error Handling**:
   - Always check errors with proper context (e.g., `fmt.Errorf("context: %w", err)`)
   - Return errors instead of logging in functions
