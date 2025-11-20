@@ -30,7 +30,7 @@ func main() {
 	flag.BoolVar(&defaultInput, "i", false, "Uses the default input.json (shorthand)")
 	flag.BoolVar(&defaultInput, "default-input", false, "Uses the default input.json")
 	flag.Parse()
-	context := context.Background()
+	ctx := context.Background()
 	config := pipeline.Config{}
 	var filepath string
 	if defaultInput {
@@ -42,7 +42,7 @@ func main() {
 	p := pipeline.New(
 		pipeline.Filter(config),
 	)
-	results, err := p.Run(context, filepath)
+	results, err := p.Run(ctx, filepath)
 	if err != nil {
 		fmt.Println("Error calculating statistics:", err)
 		return
