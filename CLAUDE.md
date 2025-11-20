@@ -13,7 +13,7 @@ This is a CLI application for analyzing game score statistics. It reads JSON fil
 - Format code: `gofmt -w .`
 
 ## Code Style Guidelines
-- **Imports**: Group standard library imports first, followed by third-party imports
+- **Imports**: Use `gofmt` which sorts imports alphabetically within a single block
 - **Formatting**: Follow Go standard formatting with `gofmt`
 - **Types**: Use clear type definitions with descriptive field names and JSON tags
   - `Player`: Represents a player with name and ID fields
