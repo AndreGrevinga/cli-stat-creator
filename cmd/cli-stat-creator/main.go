@@ -5,8 +5,8 @@ package main
 
 import (
 	"cli-stat-creator/internal/display"
-	"cli-stat-creator/internal/reader"
-	"cli-stat-creator/internal/stats"
+	"cli-stat-creator/internal/pipeline"
+	"context"
 	"flag"
 	"fmt"
 )
@@ -30,6 +30,8 @@ func main() {
 	flag.BoolVar(&defaultInput, "i", false, "Uses the default input.json (shorthand)")
 	flag.BoolVar(&defaultInput, "default-input", false, "Uses the default input.json")
 	flag.Parse()
+	context := context.Background()
+	config := pipeline.Config{}
 	var filepath string
 	if defaultInput {
 		filepath = defaultInputFile
@@ -37,39 +39,21 @@ func main() {
 		fmt.Println("Please input the file path to analyze")
 		fmt.Scan(&filepath)
 	}
-	gameScores, err := reader.ReadScoresFromFile(filepath)
-	if err != nil {
-		fmt.Println("Error reading file:", err)
-		return
-	}
-	var levelGroupedStatistics map[int]stats.Statistics
-	if !*noLevels {
-		levelGroupedStatistics, err = stats.CalculateStatisticsByLevel(gameScores)
-		if err != nil {
-			fmt.Println("Error calculating level statistics:", err)
-			return
-		}
-	}
-	var playerGroupedStatistics map[stats.Player]stats.Statistics
-	if !*noPlayers {
-		playerGroupedStatistics, err = stats.CalculateStatisticsByPlayer(gameScores)
-		if err != nil {
-			fmt.Println("Error calculating player statistics:", err)
-			return
-		}
-	}
-	statistics, err := stats.CalculateStatistics(gameScores)
+	p := pipeline.New(
+		pipeline.Filter(config),
+	)
+	results, err := p.Run(context, filepath)
 	if err != nil {
 		fmt.Println("Error calculating statistics:", err)
 		return
 	}
-	display.RenderStatistics(statistics)
+	display.RenderStatistics(results.Overall)
 	if !*noPlayers {
 		fmt.Println("\nPlayer Statistics:")
-		display.RenderPlayerStatistics(playerGroupedStatistics, detailed)
+		display.RenderPlayerStatistics(results.ByPlayer, detailed)
 	}
 	if !*noLevels {
 		fmt.Println("\nLevel Statistics:")
-		display.RenderLevelStatistics(levelGroupedStatistics, detailed)
+		display.RenderLevelStatistics(results.ByLevel, detailed)
 	}
 }
