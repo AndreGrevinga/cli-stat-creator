@@ -74,7 +74,7 @@ func Filter(cfg Config) Stage {
 	}
 }
 
-//Placeholder for the future
+// Placeholder for the future
 /*func Transform(cfg Config) Stage {
 return func(ctx context.Context, in <-chan stats.GameScore) <-chan stats.GameScore {
 }
@@ -82,12 +82,18 @@ return func(ctx context.Context, in <-chan stats.GameScore) <-chan stats.GameSco
 
 // Aggregate collects all game scores from the input channel and calculates comprehensive statistics.
 // It returns overall statistics, as well as statistics grouped by level and player.
+// The config parameter controls which statistics are calculated.
 // Returns an error if no scores are available to process.
-func Aggregate(ctx context.Context, in <-chan stats.GameScore) (Results, error) {
+func Aggregate(ctx context.Context, in <-chan stats.GameScore, config Config) (Results, error) {
 	var scores []stats.GameScore
 
 	for score := range in {
-		scores = append(scores, score)
+		select {
+		case <-ctx.Done():
+			return Results{}, ctx.Err()
+		default:
+			scores = append(scores, score)
+		}
 	}
 
 	if len(scores) == 0 {
@@ -97,13 +103,21 @@ func Aggregate(ctx context.Context, in <-chan stats.GameScore) (Results, error) 
 	if err != nil {
 		return Results{}, err
 	}
-	byLevel, err := stats.CalculateStatisticsByLevel(scores)
-	if err != nil {
-		return Results{}, err
+
+	var byLevel map[int]stats.Statistics
+	if config.CalculateByLevel {
+		byLevel, err = stats.CalculateStatisticsByLevel(scores)
+		if err != nil {
+			return Results{}, err
+		}
 	}
-	byPlayer, err := stats.CalculateStatisticsByPlayer(scores)
-	if err != nil {
-		return Results{}, err
+
+	var byPlayer map[stats.Player]stats.Statistics
+	if config.CalculateByPlayer {
+		byPlayer, err = stats.CalculateStatisticsByPlayer(scores)
+		if err != nil {
+			return Results{}, err
+		}
 	}
 
 	return Results{

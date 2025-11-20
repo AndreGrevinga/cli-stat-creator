@@ -31,7 +31,10 @@ func main() {
 	flag.BoolVar(&defaultInput, "default-input", false, "Uses the default input.json")
 	flag.Parse()
 	ctx := context.Background()
-	config := pipeline.Config{}
+	config := pipeline.Config{
+		CalculateByLevel:  !*noLevels,
+		CalculateByPlayer: !*noPlayers,
+	}
 	var filepath string
 	if defaultInput {
 		filepath = defaultInputFile
@@ -40,6 +43,7 @@ func main() {
 		fmt.Scan(&filepath)
 	}
 	p := pipeline.New(
+		config,
 		pipeline.Filter(config),
 	)
 	results, err := p.Run(ctx, filepath)

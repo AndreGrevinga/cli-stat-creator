@@ -10,6 +10,8 @@ type Config struct {
 	FilterByPlayer     []string
 	FilterByLevel      []int
 	MinScore, MaxScore int
+	CalculateByLevel   bool
+	CalculateByPlayer  bool
 }
 
 // Results contains all calculated statistics from a pipeline run.
@@ -24,12 +26,16 @@ type Results struct {
 // Stages are executed sequentially in a concurrent, channel-based architecture.
 type Pipeline struct {
 	stages []Stage
+	config Config
 }
 
-// New creates a new Pipeline with the specified stages.
+// New creates a new Pipeline with the specified configuration and stages.
 // Stages will be executed in the order they are provided.
-func New(stages ...Stage) *Pipeline {
-	pipeline := Pipeline{stages: stages}
+func New(config Config, stages ...Stage) *Pipeline {
+	pipeline := Pipeline{
+		stages: stages,
+		config: config,
+	}
 	return &pipeline
 }
 
@@ -53,5 +59,5 @@ func (p *Pipeline) Run(ctx context.Context, filename string) (Results,
 	}
 
 	// Aggregate and return
-	return Aggregate(ctx, in)
+	return Aggregate(ctx, in, p.config)
 }
