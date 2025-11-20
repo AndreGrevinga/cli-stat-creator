@@ -166,10 +166,10 @@ func TestFilter_CombinedPlayerAndScoreRange(t *testing.T) {
 	}
 
 	in := make(chan stats.GameScore, 5)
-	in <- stats.GameScore{Player: stats.Player{Name: "Alice", ID: 1}, Score: 100, Level: 1} // Alice, but score too high
-	in <- stats.GameScore{Player: stats.Player{Name: "Alice", ID: 1}, Score: 75, Level: 2}  // Matches both
-	in <- stats.GameScore{Player: stats.Player{Name: "Bob", ID: 2}, Score: 50, Level: 1}    // Bob, but score too low
-	in <- stats.GameScore{Player: stats.Player{Name: "Bob", ID: 2}, Score: 60, Level: 2}    // Matches both
+	in <- stats.GameScore{Player: stats.Player{Name: "Alice", ID: 1}, Score: 100, Level: 1}  // Alice, but score too high
+	in <- stats.GameScore{Player: stats.Player{Name: "Alice", ID: 1}, Score: 75, Level: 2}   // Matches both
+	in <- stats.GameScore{Player: stats.Player{Name: "Bob", ID: 2}, Score: 50, Level: 1}     // Bob, but score too low
+	in <- stats.GameScore{Player: stats.Player{Name: "Bob", ID: 2}, Score: 60, Level: 2}     // Matches both
 	in <- stats.GameScore{Player: stats.Player{Name: "Charlie", ID: 3}, Score: 70, Level: 1} // Score OK, wrong player
 	close(in)
 
