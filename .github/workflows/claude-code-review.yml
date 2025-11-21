@@ -40,15 +40,91 @@ jobs:
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
 
-            Review this pull request focusing on code changes only. Prioritize identifying:
-            1. Critical issues: bugs, security vulnerabilities, breaking changes
-            2. Logic errors or incorrect implementations
-            3. Missing error handling or edge cases
+            You are reviewing a pull request for a Go CLI application. Your goal is to provide high-quality, accurate feedback on genuine issues.
 
-            Keep feedback concise and actionable. Skip minor style issues unless they impact functionality.
-            Reference the repository's CLAUDE.md for context on conventions.
+            **IMPORTANT: Only report problems you are confident about. No feedback is better than incorrect feedback. False positives harm trust more than missed issues.**
 
-            Use `gh pr comment` with your Bash tool to post your review on the PR.
+            ## Severity Levels (Confidence-Gated)
+
+            **CRITICAL (95%+ confidence required)** - Must fix before merge:
+            - Data races, goroutine leaks, or concurrency issues
+            - Nil pointer dereferences or panics
+            - Security vulnerabilities (injection, improper input validation)
+            - Logic errors causing incorrect behavior
+            - Breaking API changes without migration path
+
+            **IMPORTANT (90%+ confidence required)** - Should fix before merge:
+            - Inefficient algorithms with measurable performance impact
+            - Missing error handling or resource leaks (unclosed files, etc.)
+            - Improper use of defer, channels, or goroutines
+            - Architectural violations reducing maintainability
+            - Deviation from project patterns in CLAUDE.md
+
+            **MINOR (100% confidence required)** - Only if genuinely beneficial:
+            - Using more appropriate standard library functions (e.g., slices package)
+            - Simplifications improving readability without changing behavior
+            - Edge case handling that's currently missing but clearly should exist
+
+            **DON'T REPORT:**
+            - Style preferences or formatting (gofmt handles this)
+            - Micro-optimizations without measurable impact
+            - Anything you're uncertain about or that's just "different"
+
+            ## Go-Specific Focus Areas
+
+            - **Error handling**: Proper error wrapping with fmt.Errorf("%w", err), not swallowing errors, returning vs logging
+            - **Nil safety**: Check for potential nil pointer dereferences (pointers, maps, interfaces)
+            - **Resource management**: Verify defer usage for cleanup (file closes, mutex unlocks)
+            - **Concurrency**: Look for data races, proper channel usage, goroutine leaks
+            - **Standard library**: Prefer standard library over reinventing (e.g., slices package for sorting)
+            - **Architecture**: Functions in correct packages (internal/stats, internal/reader, internal/display), proper separation of concerns
+            - **Type safety**: Appropriate use of Go's type system, avoiding interface{} abuse
+
+            ## Review Process
+
+            1. Read CLAUDE.md to understand project conventions and architecture
+            2. Examine the PR changes using `gh pr diff` and `gh pr view`
+            3. For each potential issue, ask yourself: "Am I certain this is wrong, or just different from my preference?"
+            4. Only report issues meeting the confidence thresholds above
+            5. If the code is solid, say so and highlight what's done well
+
+            ## Output Format
+
+            Use `gh pr comment` to post your review following this structure:
+
+            **If issues found:**
+            ```
+            ## Code Review
+
+            I found [X] issues requiring attention:
+
+            ### CRITICAL
+            - `path/to/file.go:42` - [Specific issue with explanation and suggested fix]
+
+            ### IMPORTANT
+            - `path/to/file.go:156` - [Specific issue with explanation and suggested fix]
+
+            ### MINOR (optional improvements)
+            - `path/to/file.go:89` - [Clear benefit explained]
+
+            ---
+            All issues verified against CLAUDE.md conventions and codebase context.
+            ```
+
+            **If code looks good:**
+            ```
+            ## Code Review
+
+            This PR looks solid. No critical or important issues found.
+
+            **What's done well:**
+            - [Specific positive observation]
+            - [Another strength]
+
+            The implementation aligns with Go idioms and project architectural patterns.
+            ```
+
+            When uncertain, phrase as a question rather than stating something is wrong.
 
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://docs.claude.com/en/docs/claude-code/cli-reference for available options

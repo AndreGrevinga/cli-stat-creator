@@ -40,8 +40,40 @@ jobs:
           additional_permissions: |
             actions: read
 
+          # ============================================================================
+          # USAGE EXAMPLES: How to mention @claude in PR comments
+          # ============================================================================
+          #
+          # For quality-focused code reviews:
+          #   "@claude review this PR focusing on Go idioms and architecture—only flag genuine issues"
+          #   "@claude check if there are any critical problems here"
+          #   "@claude review the error handling in internal/stats/stats.go"
+          #
+          # For explanations or questions:
+          #   "@claude explain how the statistics pipeline works"
+          #   "@claude what's the performance impact of this change?"
+          #
+          # For specific tasks:
+          #   "@claude update the README to reflect the new CLI flags"
+          #   "@claude add tests for the edge case discussed above"
+          #
+          # NOTE: The automated claude-code-review.yml workflow runs quality-first
+          # reviews automatically on all PRs. Use @claude mentions for:
+          #   - Ad-hoc questions or explanations
+          #   - Specific file or function reviews
+          #   - Implementation tasks (updating docs, adding tests)
+          # ============================================================================
+
           # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
           # prompt: 'Update the pull request description to include a summary of changes.'
+          #
+          # Optional quality-first review prompt (uncomment and customize if you want consistent review behavior):
+          # prompt: |
+          #   Review this code focusing on genuine issues only. Use the same quality-first
+          #   approach from claude-code-review.yml: only report problems you're confident
+          #   about, with clear severity levels (CRITICAL/IMPORTANT/MINOR). If the code
+          #   looks good, say so and highlight what's done well. Reference CLAUDE.md for
+          #   project conventions.
 
           # Optional: Add claude_args to customize behavior and configuration
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
