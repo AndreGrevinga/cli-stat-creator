@@ -37,22 +37,21 @@ func parseLevelFlag(level string) ([]int, error) {
 	var minLevel, maxLevel int64
 
 	if level == "" {
-		levels = make([]int, 0)
-		return levels, nil
+		return []int{}, nil
 	}
 
 	subStrings := strings.Split(level, "-")
 	if len(subStrings) > 2 {
 		return nil, fmt.Errorf("invalid level format: expected single level or range (e.g., '5' or '1-5'), got '%s'", level)
 	}
-	minLevel, err = strconv.ParseInt(subStrings[0], 0, 0)
+	minLevel, err = strconv.ParseInt(subStrings[0], 10, 0)
 	if err != nil {
 		return nil, err
 	}
 	if len(subStrings) == 1 {
 		maxLevel = minLevel
 	} else {
-		maxLevel, err = strconv.ParseInt(subStrings[1], 0, 0)
+		maxLevel, err = strconv.ParseInt(subStrings[1], 10, 0)
 		if err != nil {
 			return nil, err
 		}
@@ -86,7 +85,7 @@ func main() {
 	if *minScoreString == "" {
 		minScore = 0
 	} else {
-		minScore, err = strconv.ParseInt(*minScoreString, 0, 0)
+		minScore, err = strconv.ParseInt(*minScoreString, 10, 0)
 		if err != nil {
 			fmt.Printf("Error: invalid min-score value '%s': %v\n", *minScoreString, err)
 			return
@@ -95,7 +94,7 @@ func main() {
 	if *maxScoreString == "" {
 		maxScore = 0
 	} else {
-		maxScore, err = strconv.ParseInt(*maxScoreString, 0, 0)
+		maxScore, err = strconv.ParseInt(*maxScoreString, 10, 0)
 		if err != nil {
 			fmt.Printf("Error: invalid max-score value '%s': %v\n", *maxScoreString, err)
 			return
