@@ -9,6 +9,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"strconv"
+	"strings"
 )
 
 var (
@@ -16,9 +18,44 @@ var (
 	defaultInput bool
 	noPlayers    = flag.Bool("no-players", false, "Hide player statistics")
 	noLevels     = flag.Bool("no-levels", false, "Hide level statistics")
+	// Todo: Implement player filter flag
+	//playerString   = flag.String("player", "", "Only show statistics for given player")
+	levelString    = flag.String("level", "", "Only show statistics for given levels")
+	minScoreString = flag.String("min-score", "", "Minimum score filter")
+	maxScoreString = flag.String("max-score", "", "Maximum score filter")
 )
 
 const defaultInputFile = "data/input.json"
+
+func parseLevelFlag(level string) ([]int, error) {
+	var levels []int
+	var err error
+	var minLevel, maxLevel int64
+
+	if level == "" {
+		levels = make([]int, 0)
+		return levels, nil
+	}
+
+	subStrings := strings.Split(level, "-")
+	minLevel, err = strconv.ParseInt(subStrings[0], 0, 0)
+	if err != nil {
+		return nil, err
+	}
+	if len(subStrings) == 1 {
+		maxLevel = minLevel
+	} else {
+		maxLevel, err = strconv.ParseInt(subStrings[1], 0, 0)
+		if err != nil {
+			return nil, err
+		}
+	}
+	levels = make([]int, 0, maxLevel-minLevel+1)
+	for i := minLevel; i <= maxLevel; i++ {
+		levels = append(levels, int(i))
+	}
+	return levels, nil
+}
 
 // main is the entry point of the application.
 // It reads game scores from a JSON file (data/input.json), calculates statistics,
@@ -31,9 +68,37 @@ func main() {
 	flag.BoolVar(&defaultInput, "default-input", false, "Uses the default input.json")
 	flag.Parse()
 	ctx := context.Background()
+	var minScore, maxScore int64
+	var err error
+	if *minScoreString == "" {
+		minScore = 0
+	} else {
+		minScore, err = strconv.ParseInt(*minScoreString, 0, 0)
+		if err != nil {
+			fmt.Println("Error with min score flag", err)
+			return
+		}
+	}
+	if *maxScoreString == "" {
+		maxScore = 0
+	} else {
+		maxScore, err = strconv.ParseInt(*maxScoreString, 0, 0)
+		if err != nil {
+			fmt.Println("Error with max score flag", err)
+			return
+		}
+	}
+	levels, err := parseLevelFlag(*levelString)
+	if err != nil {
+		fmt.Println("Error with level flag", err)
+		return
+	}
 	config := pipeline.Config{
 		CalculateByLevel:  !*noLevels,
 		CalculateByPlayer: !*noPlayers,
+		MinScore:          int(minScore),
+		MaxScore:          int(maxScore),
+		FilterByLevel:     levels,
 	}
 	var filepath string
 	if defaultInput {
