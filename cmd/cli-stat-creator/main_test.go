@@ -86,6 +86,9 @@ func TestParseLevelFlag_InvalidInput(t *testing.T) {
 		{"space in number", "1 5"},
 		{"negative number", "-5"},
 		{"negative range", "-5--3"},
+		{"multiple dashes", "1-5-10"},
+		{"reverse range", "10-5"},
+		{"too large range", "1-1002"},
 	}
 
 	for _, tt := range tests {

@@ -42,6 +42,9 @@ func parseLevelFlag(level string) ([]int, error) {
 	}
 
 	subStrings := strings.Split(level, "-")
+	if len(subStrings) > 2 {
+		return nil, fmt.Errorf("invalid level format: expected single level or range (e.g., '5' or '1-5'), got '%s'", level)
+	}
 	minLevel, err = strconv.ParseInt(subStrings[0], 0, 0)
 	if err != nil {
 		return nil, err
@@ -53,6 +56,12 @@ func parseLevelFlag(level string) ([]int, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+	if minLevel > maxLevel {
+		return nil, fmt.Errorf("invalid level range: min (%d) cannot be greater than max (%d)", minLevel, maxLevel)
+	}
+	if maxLevel-minLevel > 1000 { // reasonable upper bound
+		return nil, fmt.Errorf("level range too large: maximum 1000 levels allowed")
 	}
 	levels = make([]int, 0, maxLevel-minLevel+1)
 	for i := minLevel; i <= maxLevel; i++ {
@@ -79,7 +88,7 @@ func main() {
 	} else {
 		minScore, err = strconv.ParseInt(*minScoreString, 0, 0)
 		if err != nil {
-			fmt.Println("Error with min score flag", err)
+			fmt.Printf("Error: invalid min-score value '%s': %v\n", *minScoreString, err)
 			return
 		}
 	}
@@ -88,13 +97,13 @@ func main() {
 	} else {
 		maxScore, err = strconv.ParseInt(*maxScoreString, 0, 0)
 		if err != nil {
-			fmt.Println("Error with max score flag", err)
+			fmt.Printf("Error: invalid max-score value '%s': %v\n", *maxScoreString, err)
 			return
 		}
 	}
 	levels, err := parseLevelFlag(*levelString)
 	if err != nil {
-		fmt.Println("Error with level flag", err)
+		fmt.Printf("Error: invalid level value '%s': %v\n", *levelString, err)
 		return
 	}
 	config := pipeline.Config{
