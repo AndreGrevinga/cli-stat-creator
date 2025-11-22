@@ -12,6 +12,20 @@ This is a CLI application for analyzing game score statistics. It reads JSON fil
 - Test single file: `go test -v path/to/file_test.go`
 - Format code: `gofmt -w .`
 
+## CLI Flags
+The application supports the following command-line flags:
+
+### Display Options
+- `-d`, `--detailed`: Show all statistics columns (includes min/max values)
+- `-i`, `--default-input`: Use the default `data/input.json` file without prompting
+- `--no-players`: Hide player statistics from output
+- `--no-levels`: Hide level statistics from output
+
+### Filtering Options
+- `--level <value>`: Filter statistics by level (single: "5" or range: "1-5")
+- `--min-score <value>`: Only include scores >= this value (default: 0)
+- `--max-score <value>`: Only include scores <= this value (default: 0)
+
 ## Code Style Guidelines
 - **Imports**: Use `gofmt` which sorts imports alphabetically within a single block
 - **Formatting**: Follow Go standard formatting with `gofmt`
@@ -62,6 +76,9 @@ When reviewing or implementing larger changes:
 ```
 
 ## Key Packages and Functions
+
+### cmd/cli-stat-creator
+- `parseLevelFlag(level string) ([]int, error)`: Parses level flag string into slice of integers (supports single level "5" or range "1-5")
 
 ### internal/stats
 - `Player`: Type representing a game player with name and unique ID

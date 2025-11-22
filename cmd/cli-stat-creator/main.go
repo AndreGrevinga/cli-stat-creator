@@ -27,6 +27,10 @@ var (
 
 const defaultInputFile = "data/input.json"
 
+// parseLevelFlag parses the level flag string into a slice of level integers.
+// It accepts either a single level (e.g., "5") or a range (e.g., "1-5").
+// Returns an empty slice if the input string is empty.
+// Returns an error if the input contains non-numeric values or is malformed.
 func parseLevelFlag(level string) ([]int, error) {
 	var levels []int
 	var err error

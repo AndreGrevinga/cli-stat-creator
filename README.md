@@ -46,6 +46,45 @@ go build -o cli-stat-creator ./cmd/cli-stat-creator
 go test ./...
 ```
 
+## CLI Flags
+
+The application supports several command-line flags for customizing output and filtering data:
+
+### Display Options
+- `-d`, `--detailed`: Show all statistics columns (includes min/max values)
+- `-i`, `--default-input`: Use the default `data/input.json` file without prompting
+- `--no-players`: Hide player statistics from output
+- `--no-levels`: Hide level statistics from output
+
+### Filtering Options
+- `--level <value>`: Filter statistics by level
+  - Single level: `--level 5`
+  - Range: `--level 1-5` (includes levels 1, 2, 3, 4, 5)
+- `--min-score <value>`: Only include scores greater than or equal to this value
+- `--max-score <value>`: Only include scores less than or equal to this value
+
+### Examples
+
+```bash
+# Use default input file with detailed statistics
+./cli-stat-creator -i -d
+
+# Show only level 3 statistics
+./cli-stat-creator -i --level 3
+
+# Show statistics for levels 1-5
+./cli-stat-creator -i --level 1-5
+
+# Filter scores between 100 and 500
+./cli-stat-creator -i --min-score 100 --max-score 500
+
+# Show only overall stats (hide player and level breakdowns)
+./cli-stat-creator -i --no-players --no-levels
+
+# Combine filters: levels 2-4 with scores 200+
+./cli-stat-creator -i --level 2-4 --min-score 200 -d
+```
+
 ## Input Data Format
 
 The application expects JSON input in the following format:
