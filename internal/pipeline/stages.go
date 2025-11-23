@@ -21,10 +21,6 @@ func Source(ctx context.Context, filename string) (<-chan stats.GameScore, error
 	logger.Info("Reading file", "filename", filename)
 	scores, err := reader.ReadScoresFromFile(ctx, filename)
 	if err != nil {
-		logger.Error("File read failed",
-			"filename", filename,
-			"error", err,
-		)
 		return nil, err
 	}
 	logger.Info("File read completed",
@@ -194,10 +190,6 @@ func Aggregate(ctx context.Context, in <-chan stats.GameScore, config Config) (R
 	logger.Info("Calculating overall statistics", "score_count", len(scores))
 	overall, err := stats.CalculateStatistics(scores)
 	if err != nil {
-		logger.Error("Statistics calculation failed",
-			"stage", "overall",
-			"error", err,
-		)
 		return Results{}, err
 	}
 
@@ -206,10 +198,6 @@ func Aggregate(ctx context.Context, in <-chan stats.GameScore, config Config) (R
 		logger.Info("Calculating level statistics", "enabled", true)
 		byLevel, err = stats.CalculateStatisticsByLevel(scores)
 		if err != nil {
-			logger.Error("Statistics calculation failed",
-				"stage", "by_level",
-				"error", err,
-			)
 			return Results{}, err
 		}
 	} else {
@@ -221,10 +209,6 @@ func Aggregate(ctx context.Context, in <-chan stats.GameScore, config Config) (R
 		logger.Info("Calculating player statistics", "enabled", true)
 		byPlayer, err = stats.CalculateStatisticsByPlayer(scores)
 		if err != nil {
-			logger.Error("Statistics calculation failed",
-				"stage", "by_player",
-				"error", err,
-			)
 			return Results{}, err
 		}
 	} else {

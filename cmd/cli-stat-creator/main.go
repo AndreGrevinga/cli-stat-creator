@@ -150,7 +150,6 @@ func main() {
 				"value", *minScoreFlag,
 				"error", err,
 			)
-			fmt.Printf("Error: invalid min-score value '%s': %v\n", *minScoreFlag, err)
 			return
 		}
 	}
@@ -163,7 +162,6 @@ func main() {
 				"value", *maxScoreFlag,
 				"error", err,
 			)
-			fmt.Printf("Error: invalid max-score value '%s': %v\n", *maxScoreFlag, err)
 			return
 		}
 	}
@@ -173,7 +171,6 @@ func main() {
 			"value", *levelFlag,
 			"error", err,
 		)
-		fmt.Printf("Error: invalid level value '%s': %v\n", *levelFlag, err)
 		return
 	}
 	config := pipeline.Config{
@@ -205,7 +202,6 @@ func main() {
 			"filepath", filepath,
 			"error", err,
 		)
-		fmt.Println("Error calculating statistics:", err)
 		return
 	}
 	logger.Info("Pipeline completed successfully",

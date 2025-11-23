@@ -53,7 +53,6 @@ func (p *Pipeline) Run(ctx context.Context, filename string) (Results,
 
 	in, err := Source(ctx, filename)
 	if err != nil {
-		logger.Error("Pipeline failed at source stage", "error", err)
 		return Results{}, err
 	}
 
@@ -63,7 +62,6 @@ func (p *Pipeline) Run(ctx context.Context, filename string) (Results,
 
 	results, err := Aggregate(ctx, in, p.config)
 	if err != nil {
-		logger.Error("Pipeline failed at aggregation stage", "error", err)
 		return Results{}, err
 	}
 

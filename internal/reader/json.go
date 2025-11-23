@@ -30,10 +30,6 @@ func ReadScoresFromFile(ctx context.Context, filename string) ([]stats.GameScore
 	}
 
 	if err := json.Unmarshal(data, &gameScores); err != nil {
-		logger.Error("JSON parsing failed",
-			"filename", filename,
-			"error", err,
-		)
 		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
