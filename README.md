@@ -10,6 +10,7 @@ A Go CLI application for analyzing game score statistics. Reads game score data 
   - Average, median, minimum, and maximum scores
   - Average score by level
 - Group scores by player level or by player
+- Structured logging with configurable verbosity levels (debug, info, warn, error)
 - JSON-based data format for easy integration
 
 ## Getting Started
@@ -63,6 +64,11 @@ The application supports several command-line flags for customizing output and f
 - `--min-score <value>`: Only include scores greater than or equal to this value
 - `--max-score <value>`: Only include scores less than or equal to this value
 
+### Logging Options
+- `-l`, `--log-level <level>`: Set logging verbosity level
+  - Available levels: `debug`, `info`, `warn`, `error`
+  - Default: `warn`
+
 ### Examples
 
 ```bash
@@ -83,6 +89,9 @@ The application supports several command-line flags for customizing output and f
 
 # Combine filters: levels 2-4 with scores 200+
 ./cli-stat-creator -i --level 2-4 --min-score 200 -d
+
+# Enable debug logging to see detailed processing information
+./cli-stat-creator -i --log-level debug
 ```
 
 ## Input Data Format
@@ -116,8 +125,13 @@ See `data/README.md` for more details about the sample data structure.
 │   │   └── stats.go          # Statistics calculation and game score types
 │   ├── reader/
 │   │   └── json.go           # JSON file reading functionality
-│   └── display/
-│       └── table.go          # Table rendering and display functions
+│   ├── display/
+│   │   └── table.go          # Table rendering and display functions
+│   ├── logging/
+│   │   └── logging.go        # Context-based structured logging
+│   └── pipeline/
+│       ├── pipeline.go       # Data processing pipeline
+│       └── stages.go         # Pipeline stage implementations
 ├── data/                     # Sample input data directory
 │   ├── input.json            # Sample game scores in JSON format
 │   └── README.md             # Documentation for data structure
@@ -137,11 +151,20 @@ See `data/README.md` for more details about the sample data structure.
 - `GroupByPlayer(scores []GameScore) map[Player][]GameScore`: Groups scores by player for analysis
 
 ### internal/reader
-- `ReadScoresFromFile(filename string) ([]GameScore, error)`: Reads and parses game scores from JSON file
+- `ReadScoresFromFile(ctx context.Context, filename string) ([]GameScore, error)`: Reads and parses game scores from JSON file with context-based logging
 
 ### internal/display
 - `RenderStatistics(s Statistics)`: Renders overall statistics table to stdout
-- `RenderLevelBreakdown(s Statistics)`: Renders per-level average scores table to stdout
+- `RenderLevelStatistics(statistics map[int]Statistics, detailed bool)`: Renders per-level statistics table to stdout
+- `RenderPlayerStatistics(statistics map[Player]Statistics, detailed bool)`: Renders per-player statistics table to stdout
+
+### internal/logging
+- `WithLogger(ctx context.Context, logger *slog.Logger) context.Context`: Adds a structured logger to a context
+- `FromContext(ctx context.Context) *slog.Logger`: Retrieves logger from context, returns no-op logger if not found
+
+### internal/pipeline
+- Data processing pipeline with structured logging support
+- Implements stages for reading, filtering, calculating statistics, and rendering output
 
 ## License
 

@@ -26,6 +26,9 @@ The application supports the following command-line flags:
 - `--min-score <value>`: Only include scores >= this value (default: 0)
 - `--max-score <value>`: Only include scores <= this value (default: 0)
 
+### Logging Options
+- `-l`, `--log-level <level>`: Set logging level (debug, info, warn, error; default: warn)
+
 ## Code Style Guidelines
 - **Imports**: Use `gofmt` which sorts imports alphabetically within a single block
 - **Formatting**: Follow Go standard formatting with `gofmt`
@@ -65,8 +68,13 @@ When reviewing or implementing larger changes:
 │   │   └── stats.go          # Statistics calculation and game score types
 │   ├── reader/
 │   │   └── json.go           # JSON file reading functionality
-│   └── display/
-│       └── table.go          # Table rendering and display functions
+│   ├── display/
+│   │   └── table.go          # Table rendering and display functions
+│   ├── logging/
+│   │   └── logging.go        # Context-based structured logging
+│   └── pipeline/
+│       ├── pipeline.go       # Data processing pipeline
+│       └── stages.go         # Pipeline stage implementations
 ├── data/                     # Sample input data directory
 │   ├── input.json            # Sample game scores in JSON format
 │   └── README.md             # Documentation for data structure
@@ -92,13 +100,21 @@ When reviewing or implementing larger changes:
 - `CalculateStatisticsByPlayer(scores []GameScore) (map[Player]Statistics, error)`: Calculates statistics for each player separately
 
 ### internal/reader
-- `ReadScoresFromFile(filename string) ([]GameScore, error)`: Reads and parses game scores from JSON file (validates .json extension and all game scores)
+- `ReadScoresFromFile(ctx context.Context, filename string) ([]GameScore, error)`: Reads and parses game scores from JSON file with context-based logging (validates .json extension and all game scores)
 
 ### internal/display
 - `RenderStatistics(s Statistics)`: Renders overall statistics table to stdout
 - `RenderGroupedStatistics[K comparable](...)`: Generic function for rendering statistics grouped by any comparable key type (used by level and player renderers)
 - `RenderLevelStatistics(statistics map[int]Statistics, detailed bool)`: Renders per-level statistics table to stdout with optional detailed view
 - `RenderPlayerStatistics(statistics map[Player]Statistics, detailed bool)`: Renders per-player statistics table to stdout with optional detailed view
+
+### internal/logging
+- `WithLogger(ctx context.Context, logger *slog.Logger) context.Context`: Adds a structured logger to a context
+- `FromContext(ctx context.Context) *slog.Logger`: Extracts logger from context, returns no-op logger if not found (graceful degradation)
+
+### internal/pipeline
+- Pipeline stages for data processing with structured logging support
+- Implements stages for reading, filtering, calculating statistics, and rendering output
 
 ## Data Format
 Input JSON should contain an array of game score objects with fields:
