@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"cli-stat-creator/internal/logging"
 	"cli-stat-creator/internal/stats"
 	"context"
 )
@@ -44,20 +45,33 @@ func New(config Config, stages ...Stage) *Pipeline {
 // per-level, and per-player results. The context can be used to cancel the operation.
 func (p *Pipeline) Run(ctx context.Context, filename string) (Results,
 	error) {
+	logger := logging.FromContext(ctx)
+	logger.Info("Pipeline started", "stage_count", len(p.stages))
+
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	// Start source
 	in, err := Source(ctx, filename)
 	if err != nil {
+		logger.Error("Pipeline failed at source stage", "error", err)
 		return Results{}, err
 	}
 
-	// Chain stages
 	for _, stage := range p.stages {
 		in = stage(ctx, in)
 	}
 
-	// Aggregate and return
-	return Aggregate(ctx, in, p.config)
+	results, err := Aggregate(ctx, in, p.config)
+	if err != nil {
+		logger.Error("Pipeline failed at aggregation stage", "error", err)
+		return Results{}, err
+	}
+
+	logger.Info("Pipeline completed successfully",
+		"overall_count", results.Overall.TotalGamesPlayed,
+		"by_level_count", len(results.ByLevel),
+		"by_player_count", len(results.ByPlayer),
+	)
+
+	return results, nil
 }
