@@ -2,6 +2,7 @@ package reader
 
 import (
 	"cli-stat-creator/internal/stats"
+	"context"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -94,7 +95,7 @@ func TestReadScoresFromFile(t *testing.T) {
 			}
 
 			// Test the function
-			result, err := ReadScoresFromFile(tmpFile)
+			result, err := ReadScoresFromFile(context.Background(), tmpFile)
 
 			// Check error expectation
 			if (err != nil) != test.wantError {
@@ -114,7 +115,7 @@ func TestReadScoresFromFile_NonExistentFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	nonExistentFile := filepath.Join(tmpDir, "does_not_exist.json")
 
-	_, err := ReadScoresFromFile(nonExistentFile)
+	_, err := ReadScoresFromFile(context.Background(), nonExistentFile)
 
 	if err == nil {
 		t.Error("ReadScoresFromFile() expected error for non-existent file, got nil")
@@ -171,7 +172,7 @@ func TestReadScoresFromFile_FileExtension(t *testing.T) {
 				t.Fatalf("Failed to create test file: %v", err)
 			}
 
-			_, err = ReadScoresFromFile(tmpFile)
+			_, err = ReadScoresFromFile(context.Background(), tmpFile)
 
 			if (err != nil) != test.wantError {
 				t.Errorf("ReadScoresFromFile(%s) error = %v, wantError %v", test.filename, err, test.wantError)
@@ -212,7 +213,7 @@ func TestReadScoresFromFile_ComplexData(t *testing.T) {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
-	result, err := ReadScoresFromFile(tmpFile)
+	result, err := ReadScoresFromFile(context.Background(), tmpFile)
 
 	if err != nil {
 		t.Fatalf("ReadScoresFromFile() unexpected error: %v", err)

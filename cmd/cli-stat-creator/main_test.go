@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log/slog"
 	"testing"
 )
 
@@ -144,4 +145,161 @@ func make100Levels() []int {
 		levels[i] = i + 1
 	}
 	return levels
+}
+
+// TestParseLogLevel_ValidLevels tests that all valid log level strings
+// are correctly parsed to their corresponding slog.Level values.
+func TestParseLogLevel_ValidLevels(t *testing.T) {
+	tests := []struct {
+		name     string
+		flag     string
+		envValue string
+		expected slog.Level
+	}{
+		{"debug from flag", "debug", "", slog.LevelDebug},
+		{"info from flag", "info", "", slog.LevelInfo},
+		{"warn from flag", "warn", "", slog.LevelWarn},
+		{"error from flag", "error", "", slog.LevelError},
+		{"DEBUG uppercase from flag", "DEBUG", "", slog.LevelDebug},
+		{"Info mixed case from flag", "Info", "", slog.LevelInfo},
+		{"WARN uppercase from flag", "WARN", "", slog.LevelWarn},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := parseLogLevel(tt.flag, tt.envValue)
+			if result.Level() != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, result.Level())
+			}
+		})
+	}
+}
+
+// TestParseLogLevel_InvalidLevels tests that invalid log level strings
+// default to WARN level.
+func TestParseLogLevel_InvalidLevels(t *testing.T) {
+	tests := []struct {
+		name     string
+		flag     string
+		envValue string
+	}{
+		{"invalid flag", "invalid", ""},
+		{"random text", "xyz", ""},
+		{"numeric value", "123", ""},
+		{"empty both", "", ""},
+		{"whitespace only", "  ", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := parseLogLevel(tt.flag, tt.envValue)
+			if result.Level() != slog.LevelWarn {
+				t.Errorf("expected WARN for invalid input, got %v", result.Level())
+			}
+		})
+	}
+}
+
+// TestParseLogLevel_FlagPrecedence tests that the flag parameter
+// takes precedence over the environment variable.
+func TestParseLogLevel_FlagPrecedence(t *testing.T) {
+	tests := []struct {
+		name     string
+		flag     string
+		envValue string
+		expected slog.Level
+	}{
+		{"flag overrides env", "debug", "error", slog.LevelDebug},
+		{"flag debug, env info", "debug", "info", slog.LevelDebug},
+		{"flag error, env debug", "error", "debug", slog.LevelError},
+		{"empty flag uses env", "", "info", slog.LevelInfo},
+		{"empty flag with invalid env", "", "invalid", slog.LevelWarn},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := parseLogLevel(tt.flag, tt.envValue)
+			if result.Level() != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, result.Level())
+			}
+		})
+	}
+}
+
+// TestParseLogLevel_EnvironmentVariable tests that the environment variable
+// is used when the flag is empty.
+func TestParseLogLevel_EnvironmentVariable(t *testing.T) {
+	tests := []struct {
+		name     string
+		envValue string
+		expected slog.Level
+	}{
+		{"env debug", "debug", slog.LevelDebug},
+		{"env info", "info", slog.LevelInfo},
+		{"env warn", "warn", slog.LevelWarn},
+		{"env error", "error", slog.LevelError},
+		{"env with spaces", "  info  ", slog.LevelInfo},
+		{"env uppercase", "ERROR", slog.LevelError},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := parseLogLevel("", tt.envValue)
+			if result.Level() != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, result.Level())
+			}
+		})
+	}
+}
+
+// TestParseLogLevel_CaseInsensitive tests that log level parsing
+// is case-insensitive.
+func TestParseLogLevel_CaseInsensitive(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected slog.Level
+	}{
+		{"lowercase debug", "debug", slog.LevelDebug},
+		{"uppercase DEBUG", "DEBUG", slog.LevelDebug},
+		{"mixed case Debug", "Debug", slog.LevelDebug},
+		{"mixed case DeBuG", "DeBuG", slog.LevelDebug},
+		{"lowercase info", "info", slog.LevelInfo},
+		{"uppercase INFO", "INFO", slog.LevelInfo},
+		{"mixed case InFo", "InFo", slog.LevelInfo},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := parseLogLevel(tt.input, "")
+			if result.Level() != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, result.Level())
+			}
+		})
+	}
+}
+
+// TestParseLogLevel_Whitespace tests that leading and trailing whitespace
+// is properly trimmed before parsing.
+func TestParseLogLevel_Whitespace(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected slog.Level
+	}{
+		{"leading space", " debug", slog.LevelDebug},
+		{"trailing space", "info ", slog.LevelInfo},
+		{"both spaces", " warn ", slog.LevelWarn},
+		{"multiple spaces", "  error  ", slog.LevelError},
+		{"tab characters", "\tdebug\t", slog.LevelDebug},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := parseLogLevel(tt.input, "")
+			if result.Level() != tt.expected {
+				t.Errorf("expected %v, got %v", tt.expected, result.Level())
+			}
+		})
+	}
 }
