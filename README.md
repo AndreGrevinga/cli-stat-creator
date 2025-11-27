@@ -1,5 +1,20 @@
 # CLI Stat Creator
 
+> **📚 Learning Project Notice**
+>
+> This project is primarily a learning exercise for exploring Go development with AI assistance.
+>
+> **Development Approach:**
+> - **Implementation code (~80%):** Written by human developer to learn Go hands-on
+> - **Tests, documentation, and architecture:** Primarily designed with [Claude Code](https://claude.com/claude-code) assistance
+> - AI serves as a mentor for design decisions, best practices, and comprehensive testing strategies
+> - All AI-generated code is reviewed, understood, and adapted before integration
+>
+> **Disclaimer:**
+> This is an educational project focused on learning Go and exploring AI-assisted development workflows. The codebase represents a learning journey rather than production-ready software. Use at your own discretion.
+
+---
+
 A Go CLI application for analyzing game score statistics. Reads game score data from JSON files and calculates comprehensive statistics including averages, medians, min/max values, and per-level breakdowns.
 
 ## Features
@@ -13,85 +28,50 @@ A Go CLI application for analyzing game score statistics. Reads game score data 
 - Structured logging with configurable verbosity levels (debug, info, warn, error)
 - JSON-based data format for easy integration
 
-## Getting Started
+## Quick Start
 
-### Prerequisites
-- Go 1.25.3 or higher
+**Prerequisites:** Go 1.25.3 or higher
 
-### Installation
-
-Clone the repository:
 ```bash
+# Clone and navigate
 git clone https://github.com/AndreGrevinga/cli-stat-creator.git
 cd cli-stat-creator
-```
 
-### Running the Application
+# Run directly
+go run ./cmd/cli-stat-creator -i
 
-```bash
-go run ./cmd/cli-stat-creator
-```
-
-The application will read game scores from `data/input.json` by default.
-
-### Building
-
-```bash
+# Or build and run
 go build -o cli-stat-creator ./cmd/cli-stat-creator
-./cli-stat-creator
-```
+./cli-stat-creator -i
 
-### Testing
-
-```bash
+# Run tests
 go test ./...
 ```
 
-## CLI Flags
+## Usage
 
-The application supports several command-line flags for customizing output and filtering data:
+**Display Options:**
+- `-i`, `--default-input` - Use default `data/input.json` without prompting
+- `-d`, `--detailed` - Show all statistics columns (min/max values)
+- `--no-players` / `--no-levels` - Hide specific statistic sections
 
-### Display Options
-- `-d`, `--detailed`: Show all statistics columns (includes min/max values)
-- `-i`, `--default-input`: Use the default `data/input.json` file without prompting
-- `--no-players`: Hide player statistics from output
-- `--no-levels`: Hide level statistics from output
+**Filtering:**
+- `--level <value>` - Single level (`5`) or range (`1-5`)
+- `--min-score <value>` / `--max-score <value>` - Filter by score range
 
-### Filtering Options
-- `--level <value>`: Filter statistics by level
-  - Single level: `--level 5`
-  - Range: `--level 1-5` (includes levels 1, 2, 3, 4, 5)
-- `--min-score <value>`: Only include scores greater than or equal to this value
-- `--max-score <value>`: Only include scores less than or equal to this value
+**Logging:**
+- `-l`, `--log-level <level>` - Set verbosity (`debug`, `info`, `warn`, `error`)
 
-### Logging Options
-- `-l`, `--log-level <level>`: Set logging verbosity level
-  - Available levels: `debug`, `info`, `warn`, `error`
-  - Default: `warn`
-
-### Examples
-
+**Examples:**
 ```bash
-# Use default input file with detailed statistics
+# Detailed stats with default input
 ./cli-stat-creator -i -d
 
-# Show only level 3 statistics
-./cli-stat-creator -i --level 3
+# Filter levels 2-4 with minimum score of 200
+./cli-stat-creator -i --level 2-4 --min-score 200
 
-# Show statistics for levels 1-5
-./cli-stat-creator -i --level 1-5
-
-# Filter scores between 100 and 500
-./cli-stat-creator -i --min-score 100 --max-score 500
-
-# Show only overall stats (hide player and level breakdowns)
-./cli-stat-creator -i --no-players --no-levels
-
-# Combine filters: levels 2-4 with scores 200+
-./cli-stat-creator -i --level 2-4 --min-score 200 -d
-
-# Enable debug logging to see detailed processing information
-./cli-stat-creator -i --log-level debug
+# Show only overall stats with debug logging
+./cli-stat-creator -i --no-players --no-levels --log-level debug
 ```
 
 ## Input Data Format
@@ -116,56 +96,14 @@ See `data/README.md` for more details about the sample data structure.
 ## Project Structure
 
 ```
-.
-├── cmd/
-│   └── cli-stat-creator/
-│       └── main.go           # Application entry point
+cli-stat-creator/
+├── cmd/cli-stat-creator/    # Application entry point
 ├── internal/
-│   ├── stats/
-│   │   └── stats.go          # Statistics calculation and game score types
-│   ├── reader/
-│   │   └── json.go           # JSON file reading functionality
-│   ├── display/
-│   │   └── table.go          # Table rendering and display functions
-│   ├── logging/
-│   │   └── logging.go        # Context-based structured logging
-│   └── pipeline/
-│       ├── pipeline.go       # Data processing pipeline
-│       └── stages.go         # Pipeline stage implementations
-├── data/                     # Sample input data directory
-│   ├── input.json            # Sample game scores in JSON format
-│   └── README.md             # Documentation for data structure
-├── go.mod                    # Go module definition (cli-stat-creator)
-├── README.md                 # Project documentation
-└── CLAUDE.md                 # AI assistant guidelines
+│   ├── stats/               # Statistics calculation
+│   ├── reader/              # JSON file reading
+│   ├── display/             # Table rendering
+│   ├── logging/             # Structured logging
+│   └── pipeline/            # Data processing pipeline
+├── data/                    # Sample input data
+└── CLAUDE.md                # AI development guidelines
 ```
-
-## Key Packages and Functions
-
-### internal/stats
-- `Player`: Type representing a player with name and ID fields
-- `GameScore`: Type representing individual game score entries (contains Player struct, Score, Level)
-- `Statistics`: Type holding calculated statistics from score data
-- `CalculateStatistics(scores []GameScore) (Statistics, error)`: Calculates comprehensive statistics
-- `GroupByLevel(scores []GameScore) map[int][]GameScore`: Groups scores by level for analysis
-- `GroupByPlayer(scores []GameScore) map[Player][]GameScore`: Groups scores by player for analysis
-
-### internal/reader
-- `ReadScoresFromFile(ctx context.Context, filename string) ([]GameScore, error)`: Reads and parses game scores from JSON file with context-based logging
-
-### internal/display
-- `RenderStatistics(s Statistics)`: Renders overall statistics table to stdout
-- `RenderLevelStatistics(statistics map[int]Statistics, detailed bool)`: Renders per-level statistics table to stdout
-- `RenderPlayerStatistics(statistics map[Player]Statistics, detailed bool)`: Renders per-player statistics table to stdout
-
-### internal/logging
-- `WithLogger(ctx context.Context, logger *slog.Logger) context.Context`: Adds a structured logger to a context
-- `FromContext(ctx context.Context) *slog.Logger`: Retrieves logger from context, returns no-op logger if not found
-
-### internal/pipeline
-- Data processing pipeline with structured logging support
-- Implements stages for reading, filtering, calculating statistics, and rendering output
-
-## License
-
-This project is licensed under the MIT License.
