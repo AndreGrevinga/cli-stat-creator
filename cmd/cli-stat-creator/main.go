@@ -107,20 +107,8 @@ func parseLogLevel(flag string, envValue string) slog.Leveler {
 	return level
 }
 
-// main is the entry point of the application.
-// It reads game scores from a JSON file (data/input.json), calculates statistics,
-// and displays the results in formatted tables including overall statistics
-// and per-level average scores.
-func main() {
-	flag.BoolVar(&detailedFlag, "detailed", false, "Show all statistics columns")
-	flag.BoolVar(&detailedFlag, "d", false, "Show all statistics columns (shorthand)")
-	flag.BoolVar(&defaultInputFlag, "i", false, "Uses the default input.json (shorthand)")
-	flag.BoolVar(&defaultInputFlag, "default-input", false, "Uses the default input.json")
-	flag.StringVar(&logLevelFlag, "log-level", "", "Level of logging")
-	flag.StringVar(&logLevelFlag, "l", "", "Level of logging (shorthand)")
-	flag.Parse()
-
-	logLevel := parseLogLevel(logLevelFlag, os.Getenv("LOG_LEVEL"))
+func setupLogging(logLevel string) (context.Context, error) {
+	logLevel := parseLogLevel(logLevel, os.Getenv("LOG_LEVEL"))
 	handler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 		Level:     logLevel,
 		AddSource: logLevel == slog.LevelDebug, // Add file:line for DEBUG
@@ -139,6 +127,9 @@ func main() {
 		"max_score", *maxScoreFlag,
 		"log_level", logLevelFlag,
 	)
+}
+
+func validateFlags(logger *slog.Logger) (*pipeline.Config, error) {
 	var minScore, maxScore int64
 	var err error
 	if *minScoreFlag == "" {
@@ -173,12 +164,32 @@ func main() {
 		)
 		return
 	}
-	config := pipeline.Config{
+	return pipeline.Config{
 		CalculateByLevel:  !*noLevelsFlag,
 		CalculateByPlayer: !*noPlayersFlag,
 		MinScore:          int(minScore),
 		MaxScore:          int(maxScore),
 		FilterByLevel:     levels,
+	}, nil
+}
+
+// main is the entry point of the application.
+// It reads game scores from a JSON file (data/input.json), calculates statistics,
+// and displays the results in formatted tables including overall statistics
+// and per-level average scores.
+func main() {
+	flag.BoolVar(&detailedFlag, "detailed", false, "Show all statistics columns")
+	flag.BoolVar(&detailedFlag, "d", false, "Show all statistics columns (shorthand)")
+	flag.BoolVar(&defaultInputFlag, "i", false, "Uses the default input.json (shorthand)")
+	flag.BoolVar(&defaultInputFlag, "default-input", false, "Uses the default input.json")
+	flag.StringVar(&logLevelFlag, "log-level", "", "Level of logging")
+	flag.StringVar(&logLevelFlag, "l", "", "Level of logging (shorthand)")
+	flag.Parse()
+	logger, err := setupLogging(logLevelFlag)
+	config, err := validateFlags(logger)
+	if err != nil {
+		fmt.Println("Error parsing flags:", err)
+		return
 	}
 	var filepath string
 	if defaultInputFlag {
@@ -188,8 +199,8 @@ func main() {
 		fmt.Scan(&filepath)
 	}
 	p := pipeline.New(
-		config,
-		pipeline.Filter(config),
+		*config,
+		pipeline.Filter(*config),
 	)
 	logger.Info("Pipeline execution started",
 		"filepath", filepath,
