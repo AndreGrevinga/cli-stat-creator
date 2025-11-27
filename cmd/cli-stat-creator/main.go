@@ -107,6 +107,130 @@ func parseLogLevel(flag string, envValue string) slog.Leveler {
 	return level
 }
 
+func setupLogging(logLevelFlag string) (context.Context, error) {
+	logLevel := parseLogLevel(logLevelFlag, os.Getenv("LOG_LEVEL"))
+	handler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level:     logLevel,
+		AddSource: logLevel == slog.LevelDebug, // Add file:line for DEBUG
+	})
+	logger := slog.New(handler)
+	ctx := context.Background()
+	ctx = logging.WithLogger(ctx, logger)
+	logger.Info("Application started")
+	return ctx, nil
+}
+
+// parseFlags validates all command-line flags and returns a pipeline configuration.
+// Returns an error if any flag values are invalid.
+func parseFlags(ctx context.Context) (pipeline.Config, error) {
+	logger := logging.FromContext(ctx)
+	var minScore, maxScore int64
+	var err error
+	if *minScoreFlag == "" {
+		minScore = 0
+	} else {
+		minScore, err = strconv.ParseInt(*minScoreFlag, 10, 0)
+		if err != nil {
+			logger.Error("Invalid min-score flag value",
+				"value", *minScoreFlag,
+				"error", err,
+			)
+			return pipeline.Config{}, err
+		}
+	}
+	if *maxScoreFlag == "" {
+		maxScore = 0
+	} else {
+		maxScore, err = strconv.ParseInt(*maxScoreFlag, 10, 0)
+		if err != nil {
+			logger.Error("Invalid max-score flag value",
+				"value", *maxScoreFlag,
+				"error", err,
+			)
+			return pipeline.Config{}, err
+		}
+	}
+	levels, err := parseLevelFlag(*levelFlag)
+	if err != nil {
+		logger.Error("Invalid level flag value",
+			"value", *levelFlag,
+			"error", err,
+		)
+		return pipeline.Config{}, err
+	}
+	logger.Debug("Parsed command-line flags",
+		"detailed", detailedFlag,
+		"default_input", defaultInputFlag,
+		"no_players", *noPlayersFlag,
+		"no_levels", *noLevelsFlag,
+		"level", *levelFlag,
+		"min_score", *minScoreFlag,
+		"max_score", *maxScoreFlag,
+		"log_level", logLevelFlag,
+	)
+	return pipeline.Config{
+		CalculateByLevel:  !*noLevelsFlag,
+		CalculateByPlayer: !*noPlayersFlag,
+		MinScore:          int(minScore),
+		MaxScore:          int(maxScore),
+		FilterByLevel:     levels,
+	}, nil
+}
+
+// getInputFilepath returns the input file path based on command-line flags.
+// If the default-input flag is set, returns the default file path.
+// Otherwise, prompts the user to enter a file path.
+func getInputFilepath() string {
+	if defaultInputFlag {
+		return defaultInputFile
+	}
+	fmt.Println("Please input the file path to analyze")
+	var filepath string
+	fmt.Scan(&filepath)
+	return filepath
+}
+
+// runPipeline executes the data processing pipeline with the given configuration.
+// It creates a pipeline with filtering stages and returns the aggregated results.
+func runPipeline(ctx context.Context, cfg pipeline.Config, filepath string) (pipeline.Results, error) {
+	logger := logging.FromContext(ctx)
+	p := pipeline.New(cfg, pipeline.Filter(cfg))
+	logger.Info("Pipeline execution started",
+		"filepath", filepath,
+		"calculate_by_level", cfg.CalculateByLevel,
+		"calculate_by_player", cfg.CalculateByPlayer,
+	)
+	results, err := p.Run(ctx, filepath)
+	if err != nil {
+		logger.Error("Pipeline execution failed",
+			"filepath", filepath,
+			"error", err,
+		)
+		return pipeline.Results{}, err
+	}
+	logger.Info("Pipeline completed successfully",
+		"overall_count", results.Overall.TotalGamesPlayed,
+		"player_count", len(results.ByPlayer),
+		"level_count", len(results.ByLevel),
+	)
+	return results, nil
+}
+
+// displayResults renders the pipeline results to stdout.
+// It always displays overall statistics, and conditionally shows
+// player and level statistics based on the provided flags.
+func displayResults(results pipeline.Results, detailed, showPlayers, showLevels bool) {
+	display.RenderStatistics(results.Overall)
+	if showPlayers {
+		fmt.Println("\nPlayer Statistics:")
+		display.RenderPlayerStatistics(results.ByPlayer, detailed)
+	}
+	if showLevels {
+		fmt.Println("\nLevel Statistics:")
+		display.RenderLevelStatistics(results.ByLevel, detailed)
+	}
+}
+
 // main is the entry point of the application.
 // It reads game scores from a JSON file (data/input.json), calculates statistics,
 // and displays the results in formatted tables including overall statistics
@@ -120,102 +244,24 @@ func main() {
 	flag.StringVar(&logLevelFlag, "l", "", "Level of logging (shorthand)")
 	flag.Parse()
 
-	logLevel := parseLogLevel(logLevelFlag, os.Getenv("LOG_LEVEL"))
-	handler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-		Level:     logLevel,
-		AddSource: logLevel == slog.LevelDebug, // Add file:line for DEBUG
-	})
-	logger := slog.New(handler)
-	ctx := context.Background()
-	ctx = logging.WithLogger(ctx, logger)
-	logger.Info("Application started")
-	logger.Debug("Parsed command-line flags",
-		"detailed", detailedFlag,
-		"default_input", defaultInputFlag,
-		"no_players", *noPlayersFlag,
-		"no_levels", *noLevelsFlag,
-		"level", *levelFlag,
-		"min_score", *minScoreFlag,
-		"max_score", *maxScoreFlag,
-		"log_level", logLevelFlag,
-	)
-	var minScore, maxScore int64
-	var err error
-	if *minScoreFlag == "" {
-		minScore = 0
-	} else {
-		minScore, err = strconv.ParseInt(*minScoreFlag, 10, 0)
-		if err != nil {
-			logger.Error("Invalid min-score flag value",
-				"value", *minScoreFlag,
-				"error", err,
-			)
-			return
-		}
-	}
-	if *maxScoreFlag == "" {
-		maxScore = 0
-	} else {
-		maxScore, err = strconv.ParseInt(*maxScoreFlag, 10, 0)
-		if err != nil {
-			logger.Error("Invalid max-score flag value",
-				"value", *maxScoreFlag,
-				"error", err,
-			)
-			return
-		}
-	}
-	levels, err := parseLevelFlag(*levelFlag)
+	ctx, err := setupLogging(logLevelFlag)
 	if err != nil {
-		logger.Error("Invalid level flag value",
-			"value", *levelFlag,
-			"error", err,
-		)
+		fmt.Println("Error setting up logging:", err)
 		return
 	}
-	config := pipeline.Config{
-		CalculateByLevel:  !*noLevelsFlag,
-		CalculateByPlayer: !*noPlayersFlag,
-		MinScore:          int(minScore),
-		MaxScore:          int(maxScore),
-		FilterByLevel:     levels,
-	}
-	var filepath string
-	if defaultInputFlag {
-		filepath = defaultInputFile
-	} else {
-		fmt.Println("Please input the file path to analyze")
-		fmt.Scan(&filepath)
-	}
-	p := pipeline.New(
-		config,
-		pipeline.Filter(config),
-	)
-	logger.Info("Pipeline execution started",
-		"filepath", filepath,
-		"calculate_by_level", config.CalculateByLevel,
-		"calculate_by_player", config.CalculateByPlayer,
-	)
-	results, err := p.Run(ctx, filepath)
+
+	config, err := parseFlags(ctx)
 	if err != nil {
-		logger.Error("Pipeline execution failed",
-			"filepath", filepath,
-			"error", err,
-		)
+		fmt.Println("Error parsing flags:", err)
 		return
 	}
-	logger.Info("Pipeline completed successfully",
-		"overall_count", results.Overall.TotalGamesPlayed,
-		"player_count", len(results.ByPlayer),
-		"level_count", len(results.ByLevel),
-	)
-	display.RenderStatistics(results.Overall)
-	if !*noPlayersFlag {
-		fmt.Println("\nPlayer Statistics:")
-		display.RenderPlayerStatistics(results.ByPlayer, detailedFlag)
+
+	filepath := getInputFilepath()
+
+	results, err := runPipeline(ctx, config, filepath)
+	if err != nil {
+		return
 	}
-	if !*noLevelsFlag {
-		fmt.Println("\nLevel Statistics:")
-		display.RenderLevelStatistics(results.ByLevel, detailedFlag)
-	}
+
+	displayResults(results, detailedFlag, !*noPlayersFlag, !*noLevelsFlag)
 }
