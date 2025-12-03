@@ -30,6 +30,9 @@ type Statistics struct {
 	MedianScore, AverageScore                                float64
 }
 
+// Validate checks that all GameScore fields contain valid values.
+// Returns an error if the player name is empty, player ID is not positive,
+// score is negative, or level is not positive.
 func (g GameScore) Validate() error {
 	if g.Player.Name == "" {
 		return errors.New("player name cannot be empty")

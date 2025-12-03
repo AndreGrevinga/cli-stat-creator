@@ -1,12 +1,13 @@
 package main
 
 import (
+	"cli-stat-creator/internal/pipeline"
 	"log/slog"
 	"testing"
 )
 
 func TestParseLevelFlag_EmptyString(t *testing.T) {
-	result, err := parseLevelFlag("")
+	result, err := pipeline.ParseLevelString("")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -29,7 +30,7 @@ func TestParseLevelFlag_SingleLevel(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := parseLevelFlag(tt.input)
+			result, err := pipeline.ParseLevelString(tt.input)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -60,7 +61,7 @@ func TestParseLevelFlag_Range(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := parseLevelFlag(tt.input)
+			result, err := pipeline.ParseLevelString(tt.input)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -94,7 +95,7 @@ func TestParseLevelFlag_InvalidInput(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := parseLevelFlag(tt.input)
+			_, err := pipeline.ParseLevelString(tt.input)
 			if err == nil {
 				t.Error("expected error, got nil")
 			}
@@ -116,7 +117,7 @@ func TestParseLevelFlag_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := parseLevelFlag(tt.input)
+			result, err := pipeline.ParseLevelString(tt.input)
 			if tt.expectError {
 				if err == nil {
 					t.Error("expected error, got nil")
@@ -141,7 +142,7 @@ func TestParseLevelFlag_EdgeCases(t *testing.T) {
 // Helper function to generate a slice of 100 levels (1-100)
 func make100Levels() []int {
 	levels := make([]int, 100)
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		levels[i] = i + 1
 	}
 	return levels

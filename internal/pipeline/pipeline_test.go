@@ -280,7 +280,7 @@ func TestSource_ValidFile(t *testing.T) {
 	ctx := context.Background()
 	filename := "../../data/input.json"
 
-	out, err := Source(ctx, filename)
+	out, err := Source(ctx, FileProvider{Filename: filename})
 	if err != nil {
 		t.Fatalf("Source failed: %v", err)
 	}
@@ -299,7 +299,7 @@ func TestSource_InvalidFile(t *testing.T) {
 	ctx := context.Background()
 	filename := "nonexistent.json"
 
-	_, err := Source(ctx, filename)
+	_, err := Source(ctx, FileProvider{Filename: filename})
 	if err == nil {
 		t.Error("Expected error for nonexistent file, got nil")
 	}
@@ -309,7 +309,7 @@ func TestSource_ContextCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	filename := "../../data/input.json"
 
-	out, err := Source(ctx, filename)
+	out, err := Source(ctx, FileProvider{Filename: filename})
 	if err != nil {
 		t.Fatalf("Source failed: %v", err)
 	}
@@ -390,7 +390,7 @@ func TestPipeline_EndToEnd(t *testing.T) {
 	}
 	p := New(config, Filter(config))
 
-	results, err := p.Run(ctx, filename)
+	results, err := p.Run(ctx, FileProvider{Filename: filename})
 	if err != nil {
 		t.Fatalf("Pipeline.Run failed: %v", err)
 	}
@@ -419,7 +419,7 @@ func TestPipeline_WithFiltering(t *testing.T) {
 	}
 	p := New(config, Filter(config))
 
-	results, err := p.Run(ctx, filename)
+	results, err := p.Run(ctx, FileProvider{Filename: filename})
 	if err != nil {
 		t.Fatalf("Pipeline.Run failed: %v", err)
 	}
@@ -479,7 +479,7 @@ func TestPipeline_ContextCancellation(t *testing.T) {
 	// Cancel immediately
 	cancel()
 
-	_, err := p.Run(ctx, filename)
+	_, err := p.Run(ctx, FileProvider{Filename: filename})
 	if err == nil {
 		// Might succeed if file is read before cancellation kicks in
 		// This is acceptable for this test

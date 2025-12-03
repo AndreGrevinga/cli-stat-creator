@@ -36,51 +36,9 @@ var (
 )
 
 const (
-	defaultInputFile = "data/input.json"
-	defaultLogLevel  = slog.LevelWarn
+	defaultInputFilepath = "data/input.json"
+	defaultLogLevel      = slog.LevelWarn
 )
-
-// parseLevelFlag parses the level flag string into a slice of level integers.
-// It accepts either a single level (e.g., "5") or a range (e.g., "1-5").
-// Returns an empty slice if the input string is empty.
-// Returns an error if the input contains non-numeric values or is malformed.
-func parseLevelFlag(level string) ([]int, error) {
-	var levels []int
-	var err error
-	var minLevel, maxLevel int64
-
-	if level == "" {
-		return []int{}, nil
-	}
-
-	subStrings := strings.Split(level, "-")
-	if len(subStrings) > 2 {
-		return nil, fmt.Errorf("invalid level format: expected single level or range (e.g., '5' or '1-5'), got '%s'", level)
-	}
-	minLevel, err = strconv.ParseInt(subStrings[0], 10, 0)
-	if err != nil {
-		return nil, err
-	}
-	if len(subStrings) == 1 {
-		maxLevel = minLevel
-	} else {
-		maxLevel, err = strconv.ParseInt(subStrings[1], 10, 0)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if minLevel > maxLevel {
-		return nil, fmt.Errorf("invalid level range: min (%d) cannot be greater than max (%d)", minLevel, maxLevel)
-	}
-	if maxLevel-minLevel > 1000 { // reasonable upper bound
-		return nil, fmt.Errorf("level range too large: maximum 1000 levels allowed")
-	}
-	levels = make([]int, 0, maxLevel-minLevel+1)
-	for i := minLevel; i <= maxLevel; i++ {
-		levels = append(levels, int(i))
-	}
-	return levels, nil
-}
 
 // parseLogLevel parses a log level from a flag or environment variable.
 // The flag parameter takes precedence over envValue. Returns slog.LevelWarn
@@ -107,6 +65,9 @@ func parseLogLevel(flag string, envValue string) slog.Leveler {
 	return level
 }
 
+// setupLogging initializes the logging system with the specified log level.
+// It creates a text handler with optional source information for debug level,
+// and returns a context containing the configured logger.
 func setupLogging(logLevelFlag string) (context.Context, error) {
 	logLevel := parseLogLevel(logLevelFlag, os.Getenv("LOG_LEVEL"))
 	handler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
@@ -150,7 +111,7 @@ func parseFlags(ctx context.Context) (pipeline.Config, error) {
 			return pipeline.Config{}, err
 		}
 	}
-	levels, err := parseLevelFlag(*levelFlag)
+	levels, err := pipeline.ParseLevelString(*levelFlag)
 	if err != nil {
 		logger.Error("Invalid level flag value",
 			"value", *levelFlag,
@@ -182,7 +143,7 @@ func parseFlags(ctx context.Context) (pipeline.Config, error) {
 // Otherwise, prompts the user to enter a file path.
 func getInputFilepath() string {
 	if defaultInputFlag {
-		return defaultInputFile
+		return defaultInputFilepath
 	}
 	fmt.Println("Please input the file path to analyze")
 	var filepath string
@@ -200,7 +161,7 @@ func runPipeline(ctx context.Context, cfg pipeline.Config, filepath string) (pip
 		"calculate_by_level", cfg.CalculateByLevel,
 		"calculate_by_player", cfg.CalculateByPlayer,
 	)
-	results, err := p.Run(ctx, filepath)
+	results, err := p.Run(ctx, pipeline.FileProvider{Filename: filepath})
 	if err != nil {
 		logger.Error("Pipeline execution failed",
 			"filepath", filepath,
@@ -238,8 +199,8 @@ func displayResults(results pipeline.Results, detailed, showPlayers, showLevels 
 func main() {
 	flag.BoolVar(&detailedFlag, "detailed", false, "Show all statistics columns")
 	flag.BoolVar(&detailedFlag, "d", false, "Show all statistics columns (shorthand)")
-	flag.BoolVar(&defaultInputFlag, "i", false, "Uses the default input.json (shorthand)")
-	flag.BoolVar(&defaultInputFlag, "default-input", false, "Uses the default input.json")
+	flag.BoolVar(&defaultInputFlag, "i", false, "Use the default input.json (shorthand)")
+	flag.BoolVar(&defaultInputFlag, "default-input", false, "Use the default input.json")
 	flag.StringVar(&logLevelFlag, "log-level", "", "Level of logging")
 	flag.StringVar(&logLevelFlag, "l", "", "Level of logging (shorthand)")
 	flag.Parse()

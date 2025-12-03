@@ -2,7 +2,6 @@ package pipeline
 
 import (
 	"cli-stat-creator/internal/logging"
-	"cli-stat-creator/internal/reader"
 	"cli-stat-creator/internal/stats"
 	"context"
 	"errors"
@@ -15,18 +14,15 @@ type Stage func(ctx context.Context, in <-chan stats.GameScore) <-chan stats.Gam
 // Source reads game scores from a JSON file and streams them through a channel.
 // It returns immediately with the channel, while scores are sent concurrently in a goroutine.
 // The operation can be cancelled via the context.
-func Source(ctx context.Context, filename string) (<-chan stats.GameScore, error) {
+func Source(ctx context.Context, provider ScoreProvider) (<-chan stats.GameScore, error) {
 	logger := logging.FromContext(ctx)
 
-	logger.Info("Reading file", "filename", filename)
-	scores, err := reader.ReadScoresFromFile(ctx, filename)
+	logger.Info("Reading scores from provider")
+	scores, err := provider.Scores(ctx)
 	if err != nil {
 		return nil, err
 	}
-	logger.Info("File read completed",
-		"filename", filename,
-		"score_count", len(scores),
-	)
+	logger.Info("Scores loaded", "score_count", len(scores))
 
 	out := make(chan stats.GameScore)
 	go func() {
