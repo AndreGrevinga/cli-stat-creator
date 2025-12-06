@@ -23,6 +23,7 @@ The application supports the following command-line flags:
 
 ### Filtering Options
 - `--level <value>`: Filter statistics by level (single: "5" or range: "1-5")
+- `--players <value>`: Filter statistics by player names (comma-separated: "Alice,Bob")
 - `--min-score <value>`: Only include scores >= this value (default: 0)
 - `--max-score <value>`: Only include scores <= this value (default: 0)
 

@@ -2,7 +2,6 @@ package pipeline
 
 import (
 	"cli-stat-creator/internal/logging"
-	"cli-stat-creator/internal/reader"
 	"cli-stat-creator/internal/stats"
 	"context"
 	"errors"
@@ -15,18 +14,15 @@ type Stage func(ctx context.Context, in <-chan stats.GameScore) <-chan stats.Gam
 // Source reads game scores from a JSON file and streams them through a channel.
 // It returns immediately with the channel, while scores are sent concurrently in a goroutine.
 // The operation can be cancelled via the context.
-func Source(ctx context.Context, filename string) (<-chan stats.GameScore, error) {
+func Source(ctx context.Context, provider ScoreProvider) (<-chan stats.GameScore, error) {
 	logger := logging.FromContext(ctx)
 
-	logger.Info("Reading file", "filename", filename)
-	scores, err := reader.ReadScoresFromFile(ctx, filename)
+	logger.Info("Reading scores from provider")
+	scores, err := provider.Scores(ctx)
 	if err != nil {
 		return nil, err
 	}
-	logger.Info("File read completed",
-		"filename", filename,
-		"score_count", len(scores),
-	)
+	logger.Info("Scores loaded", "score_count", len(scores))
 
 	out := make(chan stats.GameScore)
 	go func() {
@@ -61,6 +57,7 @@ func Filter(cfg Config) Stage {
 		go func() {
 			defer close(out)
 			var inputCount, outputCount, filteredCount int
+			matchedPlayers := make(map[string]bool)
 
 			for score := range in {
 				inputCount++
@@ -92,6 +89,7 @@ func Filter(cfg Config) Stage {
 					for _, player := range cfg.FilterByPlayer {
 						if score.Player.Name == player {
 							playerValid = true
+							matchedPlayers[player] = true
 							break
 						}
 					}
@@ -141,6 +139,17 @@ func Filter(cfg Config) Stage {
 				case out <- score:
 				case <-ctx.Done():
 					return
+				}
+			}
+
+			// Warn about unmatched player filters
+			if len(cfg.FilterByPlayer) > 0 {
+				for _, player := range cfg.FilterByPlayer {
+					if !matchedPlayers[player] {
+						logger.Warn("Player filter matched no scores",
+							"player", player,
+						)
+					}
 				}
 			}
 

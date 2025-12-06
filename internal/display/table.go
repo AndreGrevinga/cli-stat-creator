@@ -14,6 +14,7 @@ import (
 
 const defaultPrecision = 2
 
+// formatFloat converts a float64 to a string with the default precision.
 func formatFloat(f float64) string {
 	return strconv.FormatFloat(f, 'f', defaultPrecision, 64)
 }

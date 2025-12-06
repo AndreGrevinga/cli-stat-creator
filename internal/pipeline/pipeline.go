@@ -43,7 +43,7 @@ func New(config Config, stages ...Stage) *Pipeline {
 // Run executes the pipeline by reading game scores from a file and processing them
 // through all configured stages. It returns comprehensive statistics including overall,
 // per-level, and per-player results. The context can be used to cancel the operation.
-func (p *Pipeline) Run(ctx context.Context, filename string) (Results,
+func (p *Pipeline) Run(ctx context.Context, provider ScoreProvider) (Results,
 	error) {
 	logger := logging.FromContext(ctx)
 	logger.Info("Pipeline started", "stage_count", len(p.stages))
@@ -51,7 +51,7 @@ func (p *Pipeline) Run(ctx context.Context, filename string) (Results,
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	in, err := Source(ctx, filename)
+	in, err := Source(ctx, provider)
 	if err != nil {
 		return Results{}, err
 	}
