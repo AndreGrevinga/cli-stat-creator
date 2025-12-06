@@ -57,6 +57,7 @@ func Filter(cfg Config) Stage {
 		go func() {
 			defer close(out)
 			var inputCount, outputCount, filteredCount int
+			matchedPlayers := make(map[string]bool)
 
 			for score := range in {
 				inputCount++
@@ -88,6 +89,7 @@ func Filter(cfg Config) Stage {
 					for _, player := range cfg.FilterByPlayer {
 						if score.Player.Name == player {
 							playerValid = true
+							matchedPlayers[player] = true
 							break
 						}
 					}
@@ -137,6 +139,17 @@ func Filter(cfg Config) Stage {
 				case out <- score:
 				case <-ctx.Done():
 					return
+				}
+			}
+
+			// Warn about unmatched player filters
+			if len(cfg.FilterByPlayer) > 0 {
+				for _, player := range cfg.FilterByPlayer {
+					if !matchedPlayers[player] {
+						logger.Warn("Player filter matched no scores",
+							"player", player,
+						)
+					}
 				}
 			}
 
