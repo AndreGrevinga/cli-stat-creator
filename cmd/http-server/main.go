@@ -38,7 +38,7 @@ func loggerMiddleware(logger *slog.Logger) func(http.Handler) http.Handler {
 }
 
 // setupRouter creates and configures a chi router with middleware and routes.
-// It sets up CORS, logging, recovery, and mounts the API endpoints.
+// It sets up CORS, logging, recovery, and mounts the API endpoints and static file server.
 func setupRouter(logger *slog.Logger, staticDir string) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -56,7 +56,17 @@ func setupRouter(logger *slog.Logger, staticDir string) *chi.Mux {
 	}))
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.URLFormat)
+
+	// API routes
 	r.Post("/api/stats", handlers.HandleStats)
+	r.Get("/api/clear", handlers.HandleClear)
+
+	// Serve static files
+	fileServer := http.FileServer(http.Dir(staticDir))
+	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		fileServer.ServeHTTP(w, r)
+	})
+
 	return r
 }
 
@@ -80,7 +90,7 @@ var (
 	portFlag      string
 	hostFlag      = flag.String("host", "localhost", "Bind address")
 	logLevelFlag  string
-	staticDirFlag = flag.String("static-dir", ".web/static", "Path to static files directory")
+	staticDirFlag = flag.String("static-dir", "web/static", "Path to static files directory")
 )
 
 func main() {
@@ -92,7 +102,7 @@ func main() {
 	config := parseConfig()
 	router := setupRouter(slog.Default(), config.StaticDir)
 	URL := fmt.Sprintf("%s:%d", config.Host, config.Port)
-	slog.Info("Starting server", "url", URL)
+	slog.Info("Starting server", "url", URL, "static_dir", config.StaticDir)
 	err := http.ListenAndServe(URL, router)
 	if err != nil {
 		slog.Error("Failed to start server", "error", err)

@@ -4,6 +4,8 @@ import (
 	"cli-stat-creator/internal/logging"
 	"cli-stat-creator/internal/stats"
 	"context"
+	"encoding/json"
+	"fmt"
 )
 
 // Config holds configuration options for filtering game scores in the pipeline.
@@ -13,6 +15,7 @@ type Config struct {
 	MinScore, MaxScore int
 	CalculateByLevel   bool
 	CalculateByPlayer  bool
+	ShowDetailed       bool
 }
 
 // Results contains all calculated statistics from a pipeline run.
@@ -38,6 +41,26 @@ func New(config Config, stages ...Stage) *Pipeline {
 		config: config,
 	}
 	return &pipeline
+}
+
+// MarhalJSON implements the json.Marshaler interface for the Results type
+func (r Results) MarshalJSON() ([]byte, error) {
+	// ResultsAlias is an alias for Results, used to simplify JSON serialization.
+	type ResultsAlias struct {
+		Overall  stats.Statistics            `json:"overall"`
+		ByLevel  map[int]stats.Statistics    `json:"byLevel,omitempty"`
+		ByPlayer map[string]stats.Statistics `json:"byPlayer,omitempty"`
+	}
+	statsMap := make(map[string]stats.Statistics)
+	for player, stats := range r.ByPlayer {
+		statsMap[fmt.Sprintf("%s (%d)", player.Name, player.ID)] = stats
+	}
+	results := ResultsAlias{
+		Overall:  r.Overall,
+		ByLevel:  r.ByLevel,
+		ByPlayer: statsMap,
+	}
+	return json.Marshal(results)
 }
 
 // Run executes the pipeline by reading game scores from a file and processing them

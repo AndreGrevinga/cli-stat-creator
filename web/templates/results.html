@@ -1,0 +1,18 @@
+<section class="results-section">
+    <div class="results-header">
+        <h2>Analysis Results</h2>
+        <button
+            id="clear-results"
+            class="clear-btn"
+            hx-get="/api/clear"
+            hx-target="#results-section"
+            hx-swap="innerHTML"
+        >
+            Clear Results
+        </button>
+    </div>
+
+    {{template "overall-stats.html" .}} {{if .LevelStats}} {{template
+    "level-stats.html" .}} {{end}} {{if .PlayerStats}} {{template
+    "player-stats.html" .}} {{end}}
+</section>
