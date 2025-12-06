@@ -22,12 +22,11 @@ var (
 	logLevelFlag     string
 	noPlayersFlag    = flag.Bool("no-players", false, "Hide player statistics")
 	noLevelsFlag     = flag.Bool("no-levels", false, "Hide level statistics")
-	// Todo: Implement player filter flag
-	//playerString   = flag.String("player", "", "Only show statistics for given player")
-	levelFlag    = flag.String("level", "", "Only show statistics for given levels")
-	minScoreFlag = flag.String("min-score", "", "Minimum score filter")
-	maxScoreFlag = flag.String("max-score", "", "Maximum score filter")
-	logLevelMap  = map[string]slog.Leveler{
+	playersFlag      = flag.String("players", "", "Only show statistics for given players")
+	levelFlag        = flag.String("level", "", "Only show statistics for given levels")
+	minScoreFlag     = flag.String("min-score", "", "Minimum score filter")
+	maxScoreFlag     = flag.String("max-score", "", "Maximum score filter")
+	logLevelMap      = map[string]slog.Leveler{
 		"debug": slog.LevelDebug,
 		"info":  slog.LevelInfo,
 		"warn":  slog.LevelWarn,
@@ -119,6 +118,15 @@ func parseFlags(ctx context.Context) (pipeline.Config, error) {
 		)
 		return pipeline.Config{}, err
 	}
+	var players []string
+	if trimmed := strings.TrimSpace(*playersFlag); trimmed != "" {
+		parts := strings.Split(trimmed, ",")
+		for _, p := range parts {
+			if name := strings.TrimSpace(p); name != "" {
+				players = append(players, name)
+			}
+		}
+	}
 	logger.Debug("Parsed command-line flags",
 		"detailed", detailedFlag,
 		"default_input", defaultInputFlag,
@@ -128,6 +136,7 @@ func parseFlags(ctx context.Context) (pipeline.Config, error) {
 		"min_score", *minScoreFlag,
 		"max_score", *maxScoreFlag,
 		"log_level", logLevelFlag,
+		"players", *playersFlag,
 	)
 	return pipeline.Config{
 		CalculateByLevel:  !*noLevelsFlag,
@@ -135,6 +144,7 @@ func parseFlags(ctx context.Context) (pipeline.Config, error) {
 		MinScore:          int(minScore),
 		MaxScore:          int(maxScore),
 		FilterByLevel:     levels,
+		FilterByPlayer:    players,
 	}, nil
 }
 
