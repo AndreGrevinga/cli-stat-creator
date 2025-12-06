@@ -8,6 +8,11 @@ import (
 	"sync"
 )
 
+var templateDependencies = map[string][]string{
+	"results.html": {"results.html", "player-stats.html", "overall-stats.html", "level-stats.html"},
+	"error.html":   {"error.html"},
+}
+
 // Manager handles loading, caching, and rendering of HTML templates.
 // It provides thread-safe template caching for improved performance.
 type Manager struct {
@@ -42,12 +47,18 @@ func (m *Manager) Get(name string) (*template.Template, error) {
 		return tmpl, nil
 	}
 
-	path := filepath.Join(m.dir, name)
-	tmpl, err := template.ParseFiles(path)
+	dependencies := templateDependencies[name]
+	files := make([]string, len(dependencies))
+	for i, filename := range dependencies {
+		files[i] = filepath.Join(m.dir, filename)
+	}
+	tmpl, err := template.ParseFiles(files...)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse template %s: %w", name, err)
 	}
+
+	tmpl = tmpl.Lookup(name)
 
 	m.cache[name] = tmpl
 	return tmpl, nil

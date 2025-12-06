@@ -14,15 +14,18 @@ import (
 
 var tmplManager *templates.Manager
 
-/*func init() {
-tmplManager := templates.New("web/templates")
-}*/
+func init() {
+	tmplManager = templates.New("web/templates")
+}
 
 // HandleStats processes uploaded game score files and returns statistical analysis.
 // It accepts a multipart form file upload with a JSON file, processes the scores through
 // the pipeline with optional filtering, and returns results as either HTML (for htmx/browsers)
 // or JSON (for API clients) based on the Accept header.
 func HandleStats(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logging.FromContext(ctx)
+
 	// Parse multipart form with 10MB limit
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
@@ -46,8 +49,6 @@ func HandleStats(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, r, 400, "Invalid query parameters", "INVALID_PARAMS")
 		return
 	}
-	ctx := r.Context()
-	logger := logging.FromContext(ctx)
 	p := pipeline.New(cfg, pipeline.Filter(cfg))
 	results, err := p.Run(ctx, pipeline.ReaderProvider{Reader: file})
 	if err != nil {
@@ -55,11 +56,6 @@ func HandleStats(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, r, 500, "Failed to process file", "PROCESSING_ERROR")
 		return
 	}
-	logger.Info("Pipeline completed successfully",
-		"overall_count", results.Overall.TotalGamesPlayed,
-		"player_count", len(results.ByPlayer),
-		"level_count", len(results.ByLevel),
-	)
 	if wantsHTML(r) {
 		renderHTMLResults(w, results, cfg)
 	} else {
@@ -91,9 +87,12 @@ func wantsHTML(r *http.Request) bool {
 }
 
 // respondWithError sends an error response in either HTML or JSON format
-// based on the client's Accept header.
+// based on the client's Accept header. It also logs the error.
 func respondWithError(w http.ResponseWriter, r *http.Request, status int,
 	msg, code string) {
+	logger := logging.FromContext(r.Context())
+	logger.Warn("Request error", "status", status, "message", msg, "code", code, "path", r.URL.Path)
+
 	if wantsHTML(r) {
 		renderHTMLError(w, status, msg, code)
 	} else {
@@ -170,26 +169,41 @@ func parseOptionalInt(value string, defaultValue int) (int, error) {
 }
 
 func parseQueryParams(r *http.Request) (pipeline.Config, error) {
-	minScoreParam := r.URL.Query().Get("min-score")
+	minScoreParam := r.FormValue("min-score")
 	minScore, err := parseOptionalInt(minScoreParam, 0)
 	if err != nil {
 		return pipeline.Config{}, err
 	}
-	maxScoreParam := r.URL.Query().Get("max-score")
+	maxScoreParam := r.FormValue("max-score")
 	maxScore, err := parseOptionalInt(maxScoreParam, 0)
 	if err != nil {
 		return pipeline.Config{}, err
 	}
-	levelString := r.URL.Query().Get("level")
+	levelString := r.FormValue("level")
 	levels, err := pipeline.ParseLevelString(levelString)
 	if err != nil {
 		return pipeline.Config{}, err
 	}
 
-	includeParam := r.URL.Query().Get("include")
+	// Handle include parameter (for API/query string usage)
+	includeParam := r.FormValue("include")
 	_, includeLevels, includePlayers := parseIncludeParam(includeParam)
 
-	detailed := r.URL.Query().Get("detaled") == "true"
+	// Handle individual checkboxes from the form (override include param if present)
+	if r.FormValue("include-levels") != "" {
+		includeLevels = true
+	} else if includeParam == "" {
+		includeLevels = false
+	}
+
+	if r.FormValue("include-players") != "" {
+		includePlayers = true
+	} else if includeParam == "" {
+		includePlayers = false
+	}
+
+	// Checkboxes send "on" when checked, empty when unchecked
+	detailed := r.FormValue("detailed") != ""
 
 	return pipeline.Config{
 		MinScore:          minScore,

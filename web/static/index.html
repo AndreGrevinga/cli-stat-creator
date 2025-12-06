@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Game Score Statistics Analyzer</title>
         <link rel="stylesheet" href="/styles.css" />
-        <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+        <script src="/htmx.min.js"></script>
     </head>
     <body>
         <div class="container">
@@ -52,6 +52,7 @@
                             <input
                                 type="file"
                                 id="file-input"
+                                name="file"
                                 accept=".json"
                                 required
                             />
@@ -63,6 +64,7 @@
                                 <input
                                     type="text"
                                     id="level-filter"
+                                    name="level"
                                     placeholder="e.g., 5 or 1-5"
                                 />
                             </div>
@@ -73,6 +75,7 @@
                                     <input
                                         type="number"
                                         id="min-score"
+                                        name="min-score"
                                         min="0"
                                         placeholder="0"
                                     />
@@ -83,6 +86,7 @@
                                     <input
                                         type="number"
                                         id="max-score"
+                                        name="max-score"
                                         min="0"
                                         placeholder="No limit"
                                     />
@@ -94,6 +98,7 @@
                                     <input
                                         type="checkbox"
                                         id="detailed"
+                                        name="detailed"
                                         checked
                                     />
                                     <span
@@ -105,6 +110,7 @@
                                     <input
                                         type="checkbox"
                                         id="include-levels"
+                                        name="include-levels"
                                         checked
                                     />
                                     <span>Include per-level statistics</span>
@@ -113,6 +119,7 @@
                                     <input
                                         type="checkbox"
                                         id="include-players"
+                                        name="include-players"
                                         checked
                                     />
                                     <span>Include per-player statistics</span>
