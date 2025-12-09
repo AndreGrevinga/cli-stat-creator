@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Game Score Statistics Analyzer</title>
+        <link rel="stylesheet" href="/styles.css" />
+        <script src="/htmx.min.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>Game Score Statistics Analyzer</h1>
+                <p class="subtitle">
+                    Upload a JSON file to analyze game scores and view detailed
+                    statistics
+                </p>
+            </header>
+
+            <main>
+                <section class="upload-section">
+                    <form
+                        id="upload-form"
+                        hx-post="/api/stats"
+                        hx-target="#results-section"
+                        hx-encoding="multipart/form-data"
+                        hx-indicator="#loading-spinner"
+                    >
+                        <div class="file-upload">
+                            <label for="file-input" class="file-label">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path
+                                        d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                    ></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                <span id="file-name"
+                                    >Choose JSON file or drag here</span
+                                >
+                            </label>
+                            <input
+                                type="file"
+                                id="file-input"
+                                name="file"
+                                accept=".json"
+                                required
+                            />
+                        </div>
+
+                        <div class="filters">
+                            <div class="filter-group">
+                                <label for="level-filter">Level Filter</label>
+                                <input
+                                    type="text"
+                                    id="level-filter"
+                                    name="level"
+                                    placeholder="e.g., 5 or 1-5"
+                                />
+                            </div>
+
+                            <div class="filter-row">
+                                <div class="filter-group">
+                                    <label for="min-score">Min Score</label>
+                                    <input
+                                        type="number"
+                                        id="min-score"
+                                        name="min-score"
+                                        min="0"
+                                        placeholder="0"
+                                    />
+                                </div>
+
+                                <div class="filter-group">
+                                    <label for="max-score">Max Score</label>
+                                    <input
+                                        type="number"
+                                        id="max-score"
+                                        name="max-score"
+                                        min="0"
+                                        placeholder="No limit"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="checkboxes">
+                                <label class="checkbox-label">
+                                    <input
+                                        type="checkbox"
+                                        id="detailed"
+                                        name="detailed"
+                                        checked
+                                    />
+                                    <span
+                                        >Show detailed statistics
+                                        (min/max)</span
+                                    >
+                                </label>
+                                <label class="checkbox-label">
+                                    <input
+                                        type="checkbox"
+                                        id="include-levels"
+                                        name="include-levels"
+                                        checked
+                                    />
+                                    <span>Include per-level statistics</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input
+                                        type="checkbox"
+                                        id="include-players"
+                                        name="include-players"
+                                        checked
+                                    />
+                                    <span>Include per-player statistics</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="submit-btn">
+                            <span class="btn-text">Analyze Statistics</span>
+                            <span
+                                id="loading-spinner"
+                                class="btn-loader htmx-indicator"
+                            >
+                                <svg class="spinner" viewBox="0 0 50 50">
+                                    <circle
+                                        class="path"
+                                        cx="25"
+                                        cy="25"
+                                        r="20"
+                                        fill="none"
+                                        stroke-width="5"
+                                    ></circle>
+                                </svg>
+                            </span>
+                        </button>
+                    </form>
+                </section>
+
+                <div id="results-section"></div>
+            </main>
+
+            <footer>
+                <p>
+                    Upload JSON files with game score data to view comprehensive
+                    statistics and insights
+                </p>
+            </footer>
+        </div>
+
+        <script src="/app.js"></script>
+    </body>
+</html>

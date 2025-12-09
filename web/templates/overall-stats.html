@@ -1,0 +1,37 @@
+<div class="stats-card">
+    <h3 class="card-title">Overall Statistics</h3>
+    <table class="stats-table">
+        <tbody>
+            <tr>
+                <td style="font-weight: 500">Total Games</td>
+                <td class="stat-value">{{.Statistics.TotalGamesPlayed}}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: 500">Total Score</td>
+                <td class="stat-value">{{.Statistics.TotalScore}}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: 500">Average Score</td>
+                <td class="stat-value">
+                    {{printf "%.2f" .Statistics.AverageScore}}
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight: 500">Median Score</td>
+                <td class="stat-value">
+                    {{printf "%.2f" .Statistics.MedianScore}}
+                </td>
+            </tr>
+            {{if .ShowDetailed}}
+            <tr>
+                <td style="font-weight: 500">Minimum Score</td>
+                <td class="stat-value">{{.Statistics.MinimumScore}}</td>
+            </tr>
+            <tr>
+                <td style="font-weight: 500">Maximum Score</td>
+                <td class="stat-value">{{.Statistics.MaximumScore}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>

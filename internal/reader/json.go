@@ -46,7 +46,7 @@ func ReadScoresFromReader(ctx context.Context, r io.Reader) ([]stats.GameScore, 
 	}
 	for i, score := range gameScores {
 		if err := score.Validate(); err != nil {
-			logger.Warn("Invalid score skipped during validation",
+			logger.Warn("Invalid score during validation",
 				"index", i,
 				"player", score.Player.Name,
 				"score", score.Score,

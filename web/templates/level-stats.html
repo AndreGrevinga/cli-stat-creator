@@ -1,0 +1,41 @@
+{{if .LevelStats}}
+<div class="stats-card">
+    <details open>
+        <summary class="card-title">Statistics by Level</summary>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Level</th>
+                    <th>Total Games</th>
+                    <th>Total Score</th>
+                    <th>Average</th>
+                    <th>Median</th>
+                    {{if .ShowDetailed}}
+                    <th>Min</th>
+                    <th>Max</th>
+                    {{end}}
+                </tr>
+            </thead>
+            <tbody>
+                {{range $level, $stats := .LevelStats}}
+                <tr>
+                    <td>{{$level}}</td>
+                    <td class="stat-value">{{$stats.TotalGamesPlayed}}</td>
+                    <td class="stat-value">{{$stats.TotalScore}}</td>
+                    <td class="stat-value">
+                        {{printf "%.2f" $stats.AverageScore}}
+                    </td>
+                    <td class="stat-value">
+                        {{printf "%.2f" $stats.MedianScore}}
+                    </td>
+                    {{if $.ShowDetailed}}
+                    <td class="stat-value">{{$stats.MinimumScore}}</td>
+                    <td class="stat-value">{{$stats.MaximumScore}}</td>
+                    {{end}}
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </details>
+</div>
+{{end}}

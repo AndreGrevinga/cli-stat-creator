@@ -10,11 +10,23 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+)
+
+var (
+	logLevelMap = map[string]slog.Leveler{
+		"debug": slog.LevelDebug,
+		"info":  slog.LevelInfo,
+		"warn":  slog.LevelWarn,
+		"error": slog.LevelError,
+	}
+	defaultLogLevel = slog.LevelInfo
 )
 
 // Config holds the server configuration including network settings,
@@ -24,6 +36,33 @@ type Config struct {
 	Host      string
 	LogLevel  string
 	StaticDir string
+}
+
+// parseLogLevel parses a log level string to slog.Leveler.
+// Valid levels: "debug", "info", "warn", "error" (case-insensitive).
+// Returns defaultLogLevel for invalid or empty inputs.
+func parseLogLevel(levelString string) slog.Leveler {
+	levelString = strings.ToLower(strings.TrimSpace(levelString))
+
+	level, ok := logLevelMap[levelString]
+	if !ok {
+		if levelString != "" {
+			slog.Warn("Invalid log level, using default", "value", levelString, "default", "info")
+		}
+		level = defaultLogLevel
+	}
+	return level
+}
+
+// setupLogger creates a configured logger with the specified log level.
+// It creates a text handler that writes to stderr and returns the logger.
+func setupLogger(logLevelString string) *slog.Logger {
+	logLevel := parseLogLevel(logLevelString)
+	handler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level:     logLevel,
+		AddSource: logLevel == slog.LevelDebug,
+	})
+	return slog.New(handler)
 }
 
 // loggerMiddleware creates a middleware that attaches the logger to the request context.
@@ -38,7 +77,7 @@ func loggerMiddleware(logger *slog.Logger) func(http.Handler) http.Handler {
 }
 
 // setupRouter creates and configures a chi router with middleware and routes.
-// It sets up CORS, logging, recovery, and mounts the API endpoints.
+// It sets up CORS, logging, recovery, and mounts the API endpoints and static file server.
 func setupRouter(logger *slog.Logger, staticDir string) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -56,7 +95,17 @@ func setupRouter(logger *slog.Logger, staticDir string) *chi.Mux {
 	}))
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.URLFormat)
+
+	// API routes
 	r.Post("/api/stats", handlers.HandleStats)
+	r.Get("/api/clear", handlers.HandleClear)
+
+	// Serve static files
+	fileServer := http.FileServer(http.Dir(staticDir))
+	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		fileServer.ServeHTTP(w, r)
+	})
+
 	return r
 }
 
@@ -80,7 +129,7 @@ var (
 	portFlag      string
 	hostFlag      = flag.String("host", "localhost", "Bind address")
 	logLevelFlag  string
-	staticDirFlag = flag.String("static-dir", ".web/static", "Path to static files directory")
+	staticDirFlag = flag.String("static-dir", "web/static", "Path to static files directory")
 )
 
 func main() {
@@ -90,11 +139,12 @@ func main() {
 	flag.StringVar(&logLevelFlag, "l", "info", "Logging level (shorthand)")
 	flag.Parse()
 	config := parseConfig()
-	router := setupRouter(slog.Default(), config.StaticDir)
+	logger := setupLogger(config.LogLevel)
+	router := setupRouter(logger, config.StaticDir)
 	URL := fmt.Sprintf("%s:%d", config.Host, config.Port)
-	slog.Info("Starting server", "url", URL)
+	logger.Info("Starting server", "url", URL, "static_dir", config.StaticDir)
 	err := http.ListenAndServe(URL, router)
 	if err != nil {
-		slog.Error("Failed to start server", "error", err)
+		logger.Error("Failed to start server", "error", err)
 	}
 }
