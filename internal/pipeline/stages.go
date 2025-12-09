@@ -58,20 +58,17 @@ func Filter(cfg Config) Stage {
 			defer close(out)
 			var inputCount, outputCount, filteredCount int
 			matchedPlayers := make(map[string]bool)
+			levelMap := make(map[int]struct{}, len(cfg.FilterByLevel))
+			for _, level := range cfg.FilterByLevel {
+				levelMap[level] = struct{}{}
+			}
 
 			for score := range in {
 				inputCount++
 
 				// Check level filter
 				if len(cfg.FilterByLevel) > 0 {
-					levelValid := false
-					for _, level := range cfg.FilterByLevel {
-						if score.Level == level {
-							levelValid = true
-							break
-						}
-					}
-					if !levelValid {
+					if _, ok := levelMap[score.Level]; !ok {
 						filteredCount++
 						logger.Debug("Score filtered out",
 							"player", score.Player.Name,

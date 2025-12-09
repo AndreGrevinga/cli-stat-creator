@@ -6,8 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a CLI application for analyzing game score statistics. It reads JSON files containing game scores and calculates various statistics including averages, medians, and per-level breakdowns.
 
 ## Build/Run/Test Commands
+
+### CLI Application
 - Build: `go build -o cli-stat-creator ./cmd/cli-stat-creator`
 - Run: `go run ./cmd/cli-stat-creator -i`
+
+### HTTP Server
+- Build: `go build -o http-server ./cmd/http-server`
+- Run: `./http-server` or `go run ./cmd/http-server`
+
+### Testing and Formatting
 - Test: `go test ./...`
 - Test single file: `go test -v path/to/file_test.go`
 - Format code: `gofmt -w .`
@@ -29,6 +37,17 @@ The application supports the following command-line flags:
 
 ### Logging Options
 - `-l`, `--log-level <level>`: Set logging level (debug, info, warn, error; default: warn)
+
+## HTTP Server Flags
+The HTTP server supports the following command-line flags:
+
+### Server Configuration
+- `-p`, `--port <value>`: Server port (default: 8080)
+- `-h`, `--host <value>`: Bind address (default: localhost)
+- `--static-dir <value>`: Path to static files directory (default: web/static)
+
+### Logging Options
+- `-l`, `--log-level <level>`: Set logging level (debug, info, warn, error; default: info)
 
 ## Code Style Guidelines
 - **Imports**: Use `gofmt` which sorts imports alphabetically within a single block
@@ -62,20 +81,32 @@ When reviewing or implementing larger changes:
 ```
 .
 ├── cmd/
-│   └── cli-stat-creator/
-│       └── main.go           # Application entry point
+│   ├── cli-stat-creator/
+│   │   └── main.go           # CLI application entry point
+│   └── http-server/
+│       └── main.go           # HTTP server entry point, router setup, middleware
 ├── internal/
 │   ├── stats/
 │   │   └── stats.go          # Statistics calculation and game score types
 │   ├── reader/
 │   │   └── json.go           # JSON file reading functionality
 │   ├── display/
-│   │   └── table.go          # Table rendering and display functions
+│   │   └── table.go          # Table rendering and display functions (CLI)
 │   ├── logging/
 │   │   └── logging.go        # Context-based structured logging
-│   └── pipeline/
-│       ├── pipeline.go       # Data processing pipeline
-│       └── stages.go         # Pipeline stage implementations
+│   ├── pipeline/
+│   │   ├── pipeline.go       # Data processing pipeline
+│   │   └── stages.go         # Pipeline stage implementations
+│   ├── handlers/
+│   │   ├── stats.go          # HTTP request handlers for stats endpoint
+│   │   └── template_data.go  # Data structures for template rendering
+│   ├── render/
+│   │   └── json.go           # JSON and HTML response rendering
+│   └── templates/
+│       └── templates.go      # Template loading and caching
+├── web/
+│   ├── static/               # HTML, CSS, JavaScript for web interface
+│   └── templates/            # Go HTML templates for rendering
 ├── data/                     # Sample input data directory
 │   ├── input.json            # Sample game scores in JSON format
 │   └── README.md             # Documentation for data structure
@@ -116,6 +147,21 @@ When reviewing or implementing larger changes:
 ### internal/pipeline
 - Pipeline stages for data processing with structured logging support
 - Implements stages for reading, filtering, calculating statistics, and rendering output
+
+### internal/handlers
+- `HandleStats(tm *templates.Manager) http.HandlerFunc`: Main endpoint handler for file uploads and statistics processing (POST /api/stats)
+- `HandleClear() http.HandlerFunc`: Clears results display, returns empty HTML (GET /api/clear, used by htmx)
+- `parseQueryParams(r *http.Request) (pipeline.Config, error)`: Parses query/form parameters into pipeline configuration (level, min-score, max-score, detailed, include flags)
+
+### internal/render
+- `JSON(w http.ResponseWriter, data interface{})`: Renders JSON responses with proper content type
+- `Error(w http.ResponseWriter, code int, message, errorCode string, wantsHTML bool)`: Renders error responses (HTML or JSON based on content negotiation)
+- `FilterResults(overall stats.Statistics, byLevel map[int]stats.Statistics, byPlayer map[stats.Player]stats.Statistics, includeLevel, includePlayer bool) map[string]interface{}`: Filters statistics results based on include flags
+
+### internal/templates
+- `Manager`: Template manager with caching for HTML template rendering (thread-safe with sync.RWMutex)
+- `New(templatesDir string) (*Manager, error)`: Creates new template manager and loads templates from directory
+- `(m *Manager) Render(w io.Writer, name string, data interface{}) error`: Renders named template with provided data
 
 ## Data Format
 Input JSON should contain an array of game score objects with fields:
