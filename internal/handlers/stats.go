@@ -116,6 +116,7 @@ func renderHTMLResults(w http.ResponseWriter, results pipeline.Results, cfg pipe
 	err := tmplManager.Render(&buf, "results.html", data)
 	if err != nil {
 		http.Error(w, "Template rendering error: "+err.Error(), 500)
+		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write(buf.Bytes())

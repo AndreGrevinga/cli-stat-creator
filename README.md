@@ -48,6 +48,84 @@ go build -o cli-stat-creator ./cmd/cli-stat-creator
 go test ./...
 ```
 
+## HTTP Server
+
+The project includes a web interface for analyzing game score statistics. The HTTP server provides both a user-friendly web UI and a REST API for programmatic access.
+
+**Build and Run:**
+```bash
+# Build the server
+go build -o http-server ./cmd/http-server
+
+# Run with defaults (localhost:8080)
+./http-server
+
+# Or run directly
+go run ./cmd/http-server
+
+# Custom port and host
+./http-server --port 3000
+./http-server --host 0.0.0.0 --port 8080
+```
+
+**Available Flags:**
+- `-p`, `--port` - Server port (default: 8080)
+- `-h`, `--host` - Bind address (default: localhost)
+- `-l`, `--log-level` - Logging level: debug, info, warn, error (default: info)
+- `--static-dir` - Path to static files directory (default: web/static)
+
+**Web Interface Usage:**
+
+Navigate to `http://localhost:8080` in your browser. The interface allows you to:
+- Upload JSON files via drag-and-drop or file picker
+- Apply filters (level range, min/max score)
+- Toggle detailed statistics view
+- View results organized by overall, level, and player statistics
+
+**API Usage:**
+
+The server exposes a REST API at `/api/stats` that accepts JSON files and returns statistics:
+
+```bash
+# Basic file upload
+curl -X POST http://localhost:8080/api/stats \
+  -F "file=@data/input.json" \
+  -H "Accept: application/json"
+
+# With filtering parameters
+curl -X POST http://localhost:8080/api/stats \
+  -F "file=@data/input.json" \
+  -F "level=2-4" \
+  -F "min-score=200" \
+  -F "detailed=true" \
+  -H "Accept: application/json"
+
+# Example JSON response
+{
+  "overall": {
+    "totalGamesPlayed": 100,
+    "totalScore": 8500,
+    "averageScore": 85.0,
+    "medianScore": 82.0,
+    "minimumScore": 45,
+    "maximumScore": 100
+  },
+  "byLevel": {
+    "1": { /* Statistics */ },
+    "2": { /* Statistics */ }
+  },
+  "byPlayer": {
+    "Alice (1)": { /* Statistics */ }
+  }
+}
+```
+
+**Query Parameters:**
+- `level` - Filter by level (e.g., `"5"` or `"1-5"`)
+- `min-score`, `max-score` - Score range filters
+- `detailed` - Include min/max values in response
+- `include-levels`, `include-players` - Control which statistics sections to include
+
 ## Usage
 
 **Display Options:**
@@ -97,13 +175,21 @@ See `data/README.md` for more details about the sample data structure.
 
 ```
 cli-stat-creator/
-├── cmd/cli-stat-creator/    # Application entry point
+├── cmd/
+│   ├── cli-stat-creator/    # CLI application entry point
+│   └── http-server/         # HTTP server entry point
 ├── internal/
 │   ├── stats/               # Statistics calculation
 │   ├── reader/              # JSON file reading
-│   ├── display/             # Table rendering
+│   ├── display/             # Table rendering (CLI)
 │   ├── logging/             # Structured logging
-│   └── pipeline/            # Data processing pipeline
+│   ├── pipeline/            # Data processing pipeline
+│   ├── handlers/            # HTTP request handlers
+│   ├── render/              # Response rendering (JSON/HTML)
+│   └── templates/           # Template management
+├── web/
+│   ├── static/              # HTML, CSS, JavaScript
+│   └── templates/           # Go HTML templates
 ├── data/                    # Sample input data
 └── CLAUDE.md                # AI development guidelines
 ```
