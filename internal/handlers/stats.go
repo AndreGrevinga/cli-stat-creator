@@ -3,6 +3,7 @@
 package handlers
 
 import (
+	"bytes"
 	"cli-stat-creator/internal/logging"
 	"cli-stat-creator/internal/pipeline"
 	"cli-stat-creator/internal/render"
@@ -111,11 +112,14 @@ func renderHTMLResults(w http.ResponseWriter, results pipeline.Results, cfg pipe
 		PlayerStats:  results.ByPlayer,
 		ShowDetailed: cfg.ShowDetailed,
 	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	err := tmplManager.Render(w, "results.html", data)
+	var buf bytes.Buffer
+	err := tmplManager.Render(&buf, "results.html", data)
 	if err != nil {
 		http.Error(w, "Template rendering error: "+err.Error(), 500)
 	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write(buf.Bytes())
+
 }
 
 // renderHTMLError renders an error message as HTML using the error template.
@@ -141,9 +145,9 @@ func parseIncludeParam(include string) (overall, levels, players bool) {
 	}
 
 	overall, levels, players = false, false, false
-	includeStrings := strings.SplitSeq(include, ",")
-	for string := range includeStrings {
-		switch string {
+	includeStrings := strings.Split(include, ",")
+	for _, str := range includeStrings {
+		switch strings.TrimSpace(str) {
 		case "overall":
 			overall = true
 		case "levels":

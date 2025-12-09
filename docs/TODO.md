@@ -24,6 +24,17 @@ These issues apply to the `feature/http-server` branch which is not yet merged t
   - Package currently has no test coverage
   - Test JSON, Error, and FilterResults functions
 
+### Performance & Caching
+
+- [ ] Implement in-memory results cache for HTTP server
+  - Cache processed statistics based on file content hash (MD5/SHA256)
+  - Implementation: Create `StatsCache` type with sync.RWMutex for thread-safe access
+  - Cache key: Hash of uploaded file content + query parameters (filters, options)
+  - Benefits: Skip pipeline processing for duplicate file uploads
+  - Learning: Hash functions, in-memory data structures, cache invalidation, memory management
+  - Location: `internal/handlers/stats.go` or new `internal/cache/` package
+  - Future: Consider Redis-based distributed caching for production scalability
+
 ## High Priority - Bugs & Code Quality
 
 ### Main Branch Issues

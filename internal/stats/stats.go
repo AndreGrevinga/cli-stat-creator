@@ -26,8 +26,9 @@ type GameScore struct {
 // Statistics holds the calculated statistics from a collection of game scores.
 // It includes totals, aggregates (min, max, average, median), and per-level breakdowns.
 type Statistics struct {
-	TotalGamesPlayed, TotalScore, MinimumScore, MaximumScore int
-	MedianScore, AverageScore                                float64
+	TotalScore                                   int64
+	TotalGamesPlayed, MinimumScore, MaximumScore int
+	MedianScore, AverageScore                    float64
 }
 
 // Validate checks that all GameScore fields contain valid values.
@@ -58,11 +59,11 @@ func CalculateStatistics(scores []GameScore) (Statistics, error) {
 	if totalGamesPlayed == 0 {
 		return Statistics{}, errors.New("no scores provided")
 	}
-	totalScore := 0
+	totalScore := int64(0)
 	sortedScores := make([]int, totalGamesPlayed)
 	for i, gameScore := range scores {
 		score := gameScore.Score
-		totalScore += score
+		totalScore += int64(score)
 		sortedScores[i] = score
 	}
 	slices.Sort(sortedScores)
