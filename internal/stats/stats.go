@@ -29,6 +29,17 @@ type Statistics struct {
 	TotalScore                                   int64
 	TotalGamesPlayed, MinimumScore, MaximumScore int
 	MedianScore, AverageScore                    float64
+	StdDev                                       float64
+	Variance                                     float64
+	Mode                                         []int
+	Percentiles                                  Percentiles
+	IQR                                          float64
+}
+
+type Percentiles struct {
+	P25 float64
+	P75 float64
+	P90 float64
 }
 
 // Validate checks that all GameScore fields contain valid values.
