@@ -110,8 +110,9 @@ func TestParseLevelFlag_EdgeCases(t *testing.T) {
 		expectError bool
 		expected    []int
 	}{
-		{"zero level", "0", false, []int{0}},
-		{"range with zero", "0-2", false, []int{0, 1, 2}},
+		{"zero level", "0", true, nil},
+		{"range with zero start", "0-2", true, nil},
+		{"range with zero end", "1-0", true, nil},
 		{"large range", "1-100", false, make100Levels()},
 	}
 

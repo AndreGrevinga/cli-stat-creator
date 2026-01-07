@@ -27,12 +27,18 @@ func ParseLevelString(level string) ([]int, error) {
 	if err != nil {
 		return nil, err
 	}
+	if minLevel <= 0 {
+		return nil, fmt.Errorf("invalid level: levels must be positive, got %d", minLevel)
+	}
 	if len(subStrings) == 1 {
 		maxLevel = minLevel
 	} else {
 		maxLevel, err = strconv.ParseInt(subStrings[1], 10, 0)
 		if err != nil {
 			return nil, err
+		}
+		if maxLevel <= 0 {
+			return nil, fmt.Errorf("invalid level: levels must be positive, got %d", maxLevel)
 		}
 	}
 	if minLevel > maxLevel {
