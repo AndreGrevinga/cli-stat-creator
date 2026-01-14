@@ -173,6 +173,17 @@ func parseOptionalInt(value string, defaultValue int) (int, error) {
 	return result, nil
 }
 
+func parseOptionalIntPtr(value string) (*int, error) {
+	if value == "" {
+		return nil, nil
+	}
+	result, err := strconv.Atoi(value)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
 func parseQueryParams(r *http.Request) (pipeline.Config, error) {
 	minScoreParam := r.FormValue("min-score")
 	minScore, err := parseOptionalInt(minScoreParam, 0)
@@ -180,7 +191,7 @@ func parseQueryParams(r *http.Request) (pipeline.Config, error) {
 		return pipeline.Config{}, err
 	}
 	maxScoreParam := r.FormValue("max-score")
-	maxScore, err := parseOptionalInt(maxScoreParam, 0)
+	maxScore, err := parseOptionalIntPtr(maxScoreParam)
 	if err != nil {
 		return pipeline.Config{}, err
 	}

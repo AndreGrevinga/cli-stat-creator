@@ -5,6 +5,7 @@ import (
 	"cli-stat-creator/internal/stats"
 	"context"
 	"errors"
+	"fmt"
 )
 
 // Stage represents a processing step in the pipeline that transforms a stream of game scores.
@@ -46,9 +47,13 @@ func Filter(cfg Config) Stage {
 	return func(ctx context.Context, in <-chan stats.GameScore) <-chan stats.GameScore {
 		logger := logging.FromContext(ctx)
 
+		maxScoreLog := "none"
+		if cfg.MaxScore != nil {
+			maxScoreLog = fmt.Sprintf("%d", *cfg.MaxScore)
+		}
 		logger.Info("Filter stage started",
 			"min_score", cfg.MinScore,
-			"max_score", cfg.MaxScore,
+			"max_score", maxScoreLog,
 			"level_filter_count", len(cfg.FilterByLevel),
 			"player_filter_count", len(cfg.FilterByPlayer),
 		)
@@ -114,7 +119,7 @@ func Filter(cfg Config) Stage {
 					continue
 				}
 
-				if cfg.MaxScore > 0 && score.Score > cfg.MaxScore {
+				if cfg.MaxScore != nil && score.Score > *cfg.MaxScore {
 					filteredCount++
 					logger.Debug("Score filtered out",
 						"player", score.Player.Name,
