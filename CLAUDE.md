@@ -95,8 +95,10 @@ When reviewing or implementing larger changes:
 │   ├── logging/
 │   │   └── logging.go        # Context-based structured logging
 │   ├── pipeline/
-│   │   ├── pipeline.go       # Data processing pipeline
-│   │   └── stages.go         # Pipeline stage implementations
+│   │   ├── pipeline.go       # Data processing pipeline and Results type
+│   │   ├── stages.go         # Pipeline stage implementations
+│   │   ├── params.go         # Level string parsing utilities
+│   │   └── source.go         # ScoreProvider interface and implementations
 │   ├── handlers/
 │   │   ├── stats.go          # HTTP request handlers for stats endpoint
 │   │   └── template_data.go  # Data structures for template rendering
@@ -118,12 +120,18 @@ When reviewing or implementing larger changes:
 ## Key Packages and Functions
 
 ### cmd/cli-stat-creator
-- `parseLevelFlag(level string) ([]int, error)`: Parses level flag string into slice of integers (supports single level "5" or range "1-5")
+- `parseFlags(ctx context.Context) (pipeline.Config, error)`: Validates all command-line flags and returns a pipeline configuration
+- `parseLogLevel(flag string, envValue string) slog.Leveler`: Parses log level from flag or environment variable
+- `setupLogging(logLevelFlag string) (context.Context, error)`: Initializes logging system with specified log level
+- `getInputFilepath() string`: Returns input file path based on flags or user input
+- `runPipeline(ctx context.Context, cfg pipeline.Config, filepath string) (pipeline.Results, error)`: Executes the data processing pipeline
+- `displayResults(results pipeline.Results, detailed, showPlayers, showLevels bool)`: Renders pipeline results to stdout
 
 ### internal/stats
 - `Player`: Type representing a game player with name and unique ID
 - `GameScore`: Type representing individual game score entries (Player, Score, Level)
-- `Statistics`: Type holding calculated statistics from score data
+- `Statistics`: Type holding calculated statistics from score data (totals, min/max, average, median, standard deviation, variance, mode, percentiles, IQR)
+- `Percentiles`: Type holding percentile values (P25, P75, P90) computed from scores
 - `(g GameScore) Validate() error`: Validates game score fields (player name not empty, score non-negative, level and player ID positive)
 - `CalculateStatistics(scores []GameScore) (Statistics, error)`: Calculates comprehensive statistics including totals, averages, medians
 - `GroupByLevel(scores []GameScore) map[int][]GameScore`: Groups scores by level for analysis
@@ -145,23 +153,37 @@ When reviewing or implementing larger changes:
 - `FromContext(ctx context.Context) *slog.Logger`: Extracts logger from context, returns no-op logger if not found (graceful degradation)
 
 ### internal/pipeline
-- Pipeline stages for data processing with structured logging support
-- Implements stages for reading, filtering, calculating statistics, and rendering output
+- `Config`: Configuration options for filtering game scores in the pipeline (FilterByPlayer, FilterByLevel, MinScore, MaxScore, CalculateByLevel, CalculateByPlayer, ShowDetailed)
+- `Results`: Contains all calculated statistics from a pipeline run (Overall, ByLevel, ByPlayer)
+- `Pipeline`: Represents a series of processing stages that game scores flow through
+- `New(config Config, stages ...Stage) *Pipeline`: Creates a new Pipeline with specified configuration and stages
+- `(p *Pipeline) Run(ctx context.Context, provider ScoreProvider) (Results, error)`: Executes the pipeline and returns statistics
+- `ScoreProvider`: Interface for sources that can provide game scores
+- `FileProvider`: Provides game scores by reading from a file path (implements ScoreProvider)
+- `ReaderProvider`: Provides game scores by reading from an io.Reader (implements ScoreProvider)
+- `ParseLevelString(level string) ([]int, error)`: Parses level flag string into slice of integers (supports single level "5" or range "1-5")
+- `Filter(cfg Config) Stage`: Creates a filtering stage based on configuration
+- `Source(ctx context.Context, provider ScoreProvider) (<-chan stats.GameScore, error)`: Reads scores from provider into a channel
+- `Aggregate(ctx context.Context, in <-chan stats.GameScore, cfg Config) (Results, error)`: Aggregates scores into statistics
 
 ### internal/handlers
-- `HandleStats(tm *templates.Manager) http.HandlerFunc`: Main endpoint handler for file uploads and statistics processing (POST /api/stats)
-- `HandleClear() http.HandlerFunc`: Clears results display, returns empty HTML (GET /api/clear, used by htmx)
-- `parseQueryParams(r *http.Request) (pipeline.Config, error)`: Parses query/form parameters into pipeline configuration (level, min-score, max-score, detailed, include flags)
+- `HandleStats(w http.ResponseWriter, r *http.Request)`: Main endpoint handler for file uploads and statistics processing (POST /api/stats)
+- `HandleClear(w http.ResponseWriter, r *http.Request)`: Clears results display, returns empty HTML (GET /api/clear, used by htmx)
+- `ResultsData`: Type holding all data needed to render the results template
+- `StatsWithDetailed`: Type wrapping Statistics with a ShowDetailed flag for template rendering
+- `ErrorData`: Type holding error information for rendering error templates
 
 ### internal/render
-- `JSON(w http.ResponseWriter, data interface{})`: Renders JSON responses with proper content type
-- `Error(w http.ResponseWriter, code int, message, errorCode string, wantsHTML bool)`: Renders error responses (HTML or JSON based on content negotiation)
-- `FilterResults(overall stats.Statistics, byLevel map[int]stats.Statistics, byPlayer map[stats.Player]stats.Statistics, includeLevel, includePlayer bool) map[string]interface{}`: Filters statistics results based on include flags
+- `JSON(w http.ResponseWriter, status int, data any)`: Writes JSON response with specified status code and data
+- `Error(w http.ResponseWriter, status int, message string, code string)`: Writes JSON error response with status, message, and error code
+- `FilterResults(results pipeline.Results, overall, levels, players bool) any`: Creates filtered map of pipeline results based on specified flags
 
 ### internal/templates
 - `Manager`: Template manager with caching for HTML template rendering (thread-safe with sync.RWMutex)
-- `New(templatesDir string) (*Manager, error)`: Creates new template manager and loads templates from directory
-- `(m *Manager) Render(w io.Writer, name string, data interface{}) error`: Renders named template with provided data
+- `New(dir string) *Manager`: Creates new template manager that loads templates from specified directory
+- `(m *Manager) Get(name string) (*template.Template, error)`: Retrieves parsed template from cache or loads from disk
+- `(m *Manager) Render(w io.Writer, name string, data any) error`: Executes template with provided data and writes to writer
+- `(m *Manager) ClearCache()`: Removes all cached templates, forcing reload on next access
 
 ## Data Format
 Input JSON should contain an array of game score objects with fields:

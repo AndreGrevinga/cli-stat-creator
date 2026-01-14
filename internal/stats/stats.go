@@ -36,6 +36,8 @@ type Statistics struct {
 	IQR                                          float64
 }
 
+// Percentiles holds percentile values computed from game scores.
+// P25, P75, and P90 represent the 25th, 75th, and 90th percentiles respectively.
 type Percentiles struct {
 	P25 float64
 	P75 float64
