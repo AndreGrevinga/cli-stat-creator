@@ -33,7 +33,7 @@ The application supports the following command-line flags:
 - `--level <value>`: Filter statistics by level (single: "5" or range: "1-5")
 - `--players <value>`: Filter statistics by player names (comma-separated: "Alice,Bob")
 - `--min-score <value>`: Only include scores >= this value (default: 0)
-- `--max-score <value>`: Only include scores <= this value (default: 0)
+- `--max-score <value>`: Only include scores <= this value (default: no limit)
 
 ### Logging Options
 - `-l`, `--log-level <level>`: Set logging level (debug, info, warn, error; default: warn)
