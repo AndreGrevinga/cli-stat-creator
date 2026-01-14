@@ -93,9 +93,10 @@ func TestFilter_FilterByLevel(t *testing.T) {
 
 func TestFilter_FilterByScoreRange(t *testing.T) {
 	ctx := context.Background()
+	maxScore := 90
 	config := Config{
 		MinScore: 60,
-		MaxScore: 90,
+		MaxScore: &maxScore,
 	}
 
 	in := make(chan stats.GameScore, 4)
@@ -120,6 +121,71 @@ func TestFilter_FilterByScoreRange(t *testing.T) {
 	for _, score := range results {
 		if score.Score < 60 || score.Score > 90 {
 			t.Errorf("Score %d is outside range [60, 90]", score.Score)
+		}
+	}
+}
+
+func TestFilter_MaxScoreZero(t *testing.T) {
+	ctx := context.Background()
+	maxScore := 0
+	config := Config{
+		MaxScore: &maxScore,
+	}
+
+	in := make(chan stats.GameScore, 3)
+	in <- stats.GameScore{Player: stats.Player{Name: "Alice", ID: 1}, Score: 0, Level: 1}
+	in <- stats.GameScore{Player: stats.Player{Name: "Bob", ID: 2}, Score: 1, Level: 2}
+	in <- stats.GameScore{Player: stats.Player{Name: "Diana", ID: 4}, Score: 10, Level: 2}
+	close(in)
+
+	stage := Filter(config)
+	out := stage(ctx, in)
+
+	var results []stats.GameScore
+	for score := range out {
+		results = append(results, score)
+	}
+
+	// Only scores <= 0 should pass through (Alice=0)
+	if len(results) != 1 {
+		t.Errorf("Expected 1 score, got %d", len(results))
+	}
+	for _, score := range results {
+		if score.Score > 0 {
+			t.Errorf("Score %d is above max 0", score.Score)
+		}
+	}
+}
+
+func TestFilter_NoMaxScore(t *testing.T) {
+	ctx := context.Background()
+	config := Config{
+		MaxScore: nil,
+		MinScore: 50,
+	}
+
+	in := make(chan stats.GameScore, 4)
+	in <- stats.GameScore{Player: stats.Player{Name: "Alice", ID: 1}, Score: 100, Level: 1}
+	in <- stats.GameScore{Player: stats.Player{Name: "Bob", ID: 2}, Score: 50, Level: 2}
+	in <- stats.GameScore{Player: stats.Player{Name: "Charlie", ID: 3}, Score: 1000, Level: 1}
+	in <- stats.GameScore{Player: stats.Player{Name: "Diana", ID: 4}, Score: 25, Level: 2}
+	close(in)
+
+	stage := Filter(config)
+	out := stage(ctx, in)
+
+	var results []stats.GameScore
+	for score := range out {
+		results = append(results, score)
+	}
+
+	// Only scores >= 50 should pass through (no upper limit)
+	if len(results) != 3 {
+		t.Errorf("Expected 3 scores, got %d", len(results))
+	}
+	for _, score := range results {
+		if score.Score < 50 {
+			t.Errorf("Score %d is below min 50", score.Score)
 		}
 	}
 }
@@ -159,10 +225,11 @@ func TestFilter_CombinedPlayerAndLevel(t *testing.T) {
 
 func TestFilter_CombinedPlayerAndScoreRange(t *testing.T) {
 	ctx := context.Background()
+	maxScore := 90
 	config := Config{
 		FilterByPlayer: []string{"Alice", "Bob"},
 		MinScore:       60,
-		MaxScore:       90,
+		MaxScore:       &maxScore,
 	}
 
 	in := make(chan stats.GameScore, 5)
@@ -197,11 +264,12 @@ func TestFilter_CombinedPlayerAndScoreRange(t *testing.T) {
 
 func TestFilter_AllFiltersCombined(t *testing.T) {
 	ctx := context.Background()
+	maxScore := 90
 	config := Config{
 		FilterByPlayer: []string{"Alice"},
 		FilterByLevel:  []int{1, 2},
 		MinScore:       60,
-		MaxScore:       90,
+		MaxScore:       &maxScore,
 	}
 
 	in := make(chan stats.GameScore, 6)

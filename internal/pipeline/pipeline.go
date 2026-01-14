@@ -10,12 +10,13 @@ import (
 
 // Config holds configuration options for filtering game scores in the pipeline.
 type Config struct {
-	FilterByPlayer     []string
-	FilterByLevel      []int
-	MinScore, MaxScore int
-	CalculateByLevel   bool
-	CalculateByPlayer  bool
-	ShowDetailed       bool
+	FilterByPlayer    []string
+	FilterByLevel     []int
+	MinScore          int
+	MaxScore          *int // nil means no maximum limit
+	CalculateByLevel  bool
+	CalculateByPlayer bool
+	ShowDetailed      bool
 }
 
 // Results contains all calculated statistics from a pipeline run.

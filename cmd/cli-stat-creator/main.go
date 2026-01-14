@@ -84,7 +84,8 @@ func setupLogging(logLevelFlag string) (context.Context, error) {
 // Returns an error if any flag values are invalid.
 func parseFlags(ctx context.Context) (pipeline.Config, error) {
 	logger := logging.FromContext(ctx)
-	var minScore, maxScore int64
+	var minScore int64
+	var maxScore *int
 	var err error
 	if *minScoreFlag == "" {
 		minScore = 0
@@ -99,9 +100,9 @@ func parseFlags(ctx context.Context) (pipeline.Config, error) {
 		}
 	}
 	if *maxScoreFlag == "" {
-		maxScore = 0
+		maxScore = nil
 	} else {
-		maxScore, err = strconv.ParseInt(*maxScoreFlag, 10, 0)
+		maxScoreVal, err := strconv.ParseInt(*maxScoreFlag, 10, 0)
 		if err != nil {
 			logger.Error("Invalid max-score flag value",
 				"value", *maxScoreFlag,
@@ -109,6 +110,8 @@ func parseFlags(ctx context.Context) (pipeline.Config, error) {
 			)
 			return pipeline.Config{}, err
 		}
+		maxScoreInt := int(maxScoreVal)
+		maxScore = &maxScoreInt
 	}
 	levels, err := pipeline.ParseLevelString(*levelFlag)
 	if err != nil {
@@ -142,7 +145,7 @@ func parseFlags(ctx context.Context) (pipeline.Config, error) {
 		CalculateByLevel:  !*noLevelsFlag,
 		CalculateByPlayer: !*noPlayersFlag,
 		MinScore:          int(minScore),
-		MaxScore:          int(maxScore),
+		MaxScore:          maxScore,
 		FilterByLevel:     levels,
 		FilterByPlayer:    players,
 	}, nil
