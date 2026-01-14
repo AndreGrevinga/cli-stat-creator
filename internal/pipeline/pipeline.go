@@ -44,7 +44,7 @@ func New(config Config, stages ...Stage) *Pipeline {
 	return &pipeline
 }
 
-// MarhalJSON implements the json.Marshaler interface for the Results type
+// MarshalJSON implements the json.Marshaler interface for the Results type.
 func (r Results) MarshalJSON() ([]byte, error) {
 	// ResultsAlias is an alias for Results, used to simplify JSON serialization.
 	type ResultsAlias struct {

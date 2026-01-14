@@ -135,6 +135,7 @@ curl -X POST http://localhost:8080/api/stats \
 
 **Filtering:**
 - `--level <value>` - Single level (`5`) or range (`1-5`)
+- `--players <value>` - Filter by player names (comma-separated: `Alice,Bob`)
 - `--min-score <value>` / `--max-score <value>` - Filter by score range
 
 **Logging:**
